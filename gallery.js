@@ -1,5 +1,5 @@
 // --- CONFIG: your Apps Script Web App URL (no trailing slash)
-const EXEC = 'https://script.google.com/macros/s/YOUR_EXEC_URL_HERE/exec';
+const EXEC = 'https://script.google.com/macros/s/AKfycbyh2wrTXGhKAkoCEqt_ZN2HzoSX6w360OMcLw9hBP5Mn35uX7-hS1WBTahXyLZpvJEE/exec';
 const PAGE_SIZE = 24;
 
 // --- helpers ---
