@@ -1,29 +1,72 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>RESCUED.ART — Available</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/rescued-art-192.png" />
+  <title>RESCUED.ART</title>
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #fff;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 4px; /* small gap */
+      padding: 4px;
+    }
+    .tile {
+      position: relative;
+      overflow: hidden;
+      background: #111;
+      aspect-ratio: 1/1;
+    }
+    .tile img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .photos-count {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      background: rgba(0,0,0,0.6);
+      padding: 2px 6px;
+      font-size: 12px;
+      border-radius: 3px;
+    }
+  </style>
 </head>
 <body>
-  <header><h1>RESCUED.ART — Available</h1></header>
-  <main>
-    <div id="grid" class="grid" aria-live="polite"></div>
-    <div id="sentinel" class="sentinel" aria-hidden="true"></div>
-  </main>
+  <div class="grid" id="gallery"></div>
 
-  <div id="overlay" class="overlay">
-    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ov-title">
-      <h2><span id="ov-title">Item</span><button id="ov-close" class="close">Close</button></h2>
-      <img id="ov-img" class="bigimg" alt="" />
-      <div class="actions">
-        <button class="btn buy" id="btn-buy">Buy</button>
-        <button class="btn rent" id="btn-rent">Rent</button>
-      </div>
-    </div>
-  </div>
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzXYKl5Wi1iOplK9d4mZNHtg-H70H9lb07JkitkPrl0Zb7pVoh8sPYWTxzicUtlE-a4/exec';
 
-  <script src="gallery.js"></script>
+    async function fetchItems() {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      if (!data.ok) return;
+      const grid = document.getElementById('gallery');
+      grid.innerHTML = '';
+      data.items.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'tile';
+        div.innerHTML = `
+          <div class="photos-count">${item.count} photos — swipe</div>
+          <img src="${item.coverUrl}" alt="">
+        `;
+        grid.appendChild(div);
+      });
+    }
+
+    fetchItems();
+  </script>
 </body>
 </html>
