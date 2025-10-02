@@ -1,40 +1,42 @@
 <!doctype html>
 <html>
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Rescued.Art — Available</title>
 <style>
   :root { --gap: 10px; --bg:#0b0b0c; --tile:#151517; --fg:#f3f3f4; --accent:#0a7; }
   * { box-sizing: border-box; }
-  body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-         color: var(--fg); background: var(--bg); }
-  header { position: sticky; top:0; z-index: 10; padding: 12px 16px; background: linear-gradient(#111, #0b0b0c); border-bottom: 1px solid #222; }
-  h1 { margin:0; font-size: 1.1rem; letter-spacing:.4px; }
-  .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--gap); padding: var(--gap); }
-  .tile { background: var(--tile); border-radius: 14px; overflow:hidden; position: relative; }
-  .tile .imgwrap { position: relative; width:100%; padding-top: 100%; overflow:hidden; background:#0f0f12; }
-  .tile img { position:absolute; inset:0; width:100%; height:100%; object-fit: cover; transition: transform 120ms ease; }
-  .tile:hover img { transform: scale(1.02); }
-  .meta { padding: 10px 12px; font-size:.9rem; color:#c9c9cf; display:flex; justify-content:space-between; align-items:center; }
+  body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; color:var(--fg); background:var(--bg); }
+  header { position:sticky; top:0; z-index:10; padding:12px 16px; background:linear-gradient(#111,#0b0b0c); border-bottom:1px solid #222; }
+  h1 { margin:0; font-size:1.1rem; letter-spacing:.4px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:var(--gap); padding:var(--gap); }
+  .tile { background:var(--tile); border-radius:14px; overflow:hidden; position:relative; }
+  .tile .imgwrap { position:relative; width:100%; padding-top:100%; overflow:hidden; background:#0f0f12; }
+  .tile img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition:transform 120ms ease; }
+  .tile:hover img { transform:scale(1.02); }
+  .meta { padding:10px 12px; font-size:.9rem; color:#c9c9cf; display:flex; justify-content:space-between; align-items:center; }
   .token { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size:.88rem; color:#9ed9c9; }
   .count { font-size:.8rem; color:#aaa; }
-  /* overlay */
-  .overlay { position: fixed; inset:0; background: rgba(0,0,0,0.65); display:none; align-items:center; justify-content:center; }
-  .sheet { background:#0f0f12; border:1px solid #2a2a2e; border-radius:16px; padding:16px; width:min(520px, 92vw); color:#eaeaf0; }
+  .overlay { position:fixed; inset:0; background:rgba(0,0,0,.65); display:none; align-items:center; justify-content:center; }
+  .sheet { background:#0f0f12; border:1px solid #2a2a2e; border-radius:16px; padding:16px; width:min(520px,92vw); color:#eaeaf0; }
   .sheet h2 { margin:0 0 8px 0; font-size:1.05rem; display:flex; justify-content:space-between; align-items:center; }
-  .sheet .bigimg { width:100%; height: 48vh; object-fit: contain; background:#0b0b0c; border-radius: 10px; }
+  .sheet .bigimg { width:100%; height:48vh; object-fit:contain; background:#0b0b0c; border-radius:10px; }
   .actions { display:flex; gap:10px; margin-top:12px; }
   .btn { flex:1; padding:12px; border-radius:12px; border:1px solid #2b2b30; background:#18181b; color:#fff; font-weight:600; cursor:pointer; }
   .btn.buy { background:#0a7; border-color:#0a7; }
   .btn.rent { background:#2d2d33; }
   .close { border:none; background:#222; color:#ccc; padding:6px 10px; border-radius:8px; cursor:pointer; }
   .hint { position:absolute; right:8px; top:8px; background:rgba(0,0,0,.45); color:#eee; font-size:.75rem; padding:4px 6px; border-radius:8px; }
+  .sentinel { height: 1px; }
 </style>
 </head>
 <body>
   <header><h1>RESCUED.ART — Available</h1></header>
-  <main><div id="grid" class="grid"></div></main>
+  <main>
+    <div id="grid" class="grid"></div>
+    <div id="sentinel" class="sentinel"></div>
+  </main>
 
   <div id="overlay" class="overlay">
     <div class="sheet">
@@ -48,101 +50,143 @@
   </div>
 
 <script>
-// ====== CONFIG ======
-const API = 'https://script.google.com/macros/s/AKfycbyh2wrTXGhKAkoCEqt_ZN2HzoSX6w360OMcLw9hBP5Mn35uX7-hS1WBTahXyLZpvJEE/exec?api=items';
+// ===== config =====
+const EXEC = 'https://script.google.com/macros/s/AKfycbzXYKl5Wi1iOplK9d4mZNHtg-H70H9lb07JkitkPrl0Zb7pVoh8sPYWTxzicUtlE-a4/exec';
+const PAGE_SIZE = 24;
 
-// ====== helpers ======
-const grid = document.getElementById('grid');
-const overlay = document.getElementById('overlay');
-const ovImg = document.getElementById('ov-img');
-const ovTitle = document.getElementById('ov-title');
-const ovClose = document.getElementById('ov-close');
-const btnBuy = document.getElementById('btn-buy');
-const btnRent = document.getElementById('btn-rent');
+// ===== helpers =====
+const $ = sel => document.querySelector(sel);
+const grid = $('#grid');
+const overlay = $('#overlay');
+const ovImg = $('#ov-img');
+const ovTitle = $('#ov-title');
+$('#ov-close').onclick = () => overlay.style.display = 'none';
+$('#btn-buy').onclick = () => alert('Buy flow coming soon');
+$('#btn-rent').onclick = () => alert('Rent flow coming soon');
 
-// Extract FILE_ID from a UC link (…uc?id=FILE_ID…)
 function fileIdFromUc(url){ const m=(url||'').match(/[?&]id=([^&]+)/); return m?m[1]:''; }
-// Build Google image CDN URL (renders inline, no redirects)
-function lh3Url(fileId, width = 1600){ return fileId?`https://lh3.googleusercontent.com/d/${fileId}=w${width}`:''; }
-function imageUrlAt(item, index, width = 1600){
-  const uc = item.imageUrls[index] || '';
-  return lh3Url(fileIdFromUc(uc), width);
+function lh3Url(fileId,width=1600){ return fileId?`https://lh3.googleusercontent.com/d/${fileId}=w${width}`:''; }
+function imageUrlAt(item,idx,w=1600){ return lh3Url(fileIdFromUc(item.imageUrls[idx] || ''), w); }
+
+// Only set img.src when visible
+function lazyImg(img, src){
+  img.dataset.src = src;
+  lazyObserver.observe(img);
 }
 
-// ====== UI ======
 function makeTile(item){
-  const t=document.createElement('div'); t.className='tile'; t.dataset.token=item.token; t.dataset.index='0';
-  const imgwrap=document.createElement('div'); imgwrap.className='imgwrap';
-  const img=document.createElement('img');
-  img.src=imageUrlAt(item,0,800); img.alt=item.token; img.loading='lazy'; img.decoding='async';
-  const hint=document.createElement('div'); hint.className='hint'; hint.textContent=`${item.count} photo${item.count>1?'s':''} — swipe`;
-  imgwrap.append(img,hint); t.append(imgwrap);
-  const meta=document.createElement('div'); meta.className='meta';
-  meta.innerHTML=`<span class="token">${item.token}</span><span class="count">${item.count}</span>`;
+  const t = document.createElement('div'); t.className='tile'; t.dataset.token=item.token; t.dataset.index='0';
+
+  const imgwrap = document.createElement('div'); imgwrap.className='imgwrap';
+  const img = document.createElement('img');
+  // thumbnail only (fast)
+  lazyImg(img, imageUrlAt(item, 0, 400));
+  img.alt = item.token; img.loading='lazy'; img.decoding='async';
+
+  const hint = document.createElement('div'); hint.className='hint';
+  hint.textContent = `${item.count} photo${item.count>1?'s':''} — swipe`;
+  imgwrap.append(img, hint);
+  t.append(imgwrap);
+
+  const meta = document.createElement('div'); meta.className='meta';
+  meta.innerHTML = `<span class="token">${item.token}</span><span class="count">${item.count}</span>`;
   t.append(meta);
 
-  t.addEventListener('click',()=>openOverlay(item, +t.dataset.index||0));
-
-  // touch swipe
-  let startX=null;
-  imgwrap.addEventListener('touchstart',e=>{startX=e.touches[0].clientX;},{passive:true});
-  imgwrap.addEventListener('touchmove',e=>{
-    if(startX==null)return; const dx=e.touches[0].clientX-startX;
-    if(Math.abs(dx)>40){ changeTileImage(item,t,dx>0?-1:1); startX=e.touches[0].clientX; }
-  },{passive:true});
-  // mouse swipe
+  // swipe/drag to cycle
+  let startX = null;
+  imgwrap.addEventListener('touchstart', e=>{ startX = e.touches[0].clientX; }, {passive:true});
+  imgwrap.addEventListener('touchmove', e=>{
+    if (startX==null) return;
+    const dx = e.touches[0].clientX - startX;
+    if (Math.abs(dx) > 40) { changeTileImage(item, t, dx>0 ? -1 : 1); startX = e.touches[0].clientX; }
+  }, {passive:true});
   let mouseStart=null;
-  imgwrap.addEventListener('mousedown',e=>{mouseStart=e.clientX;});
-  imgwrap.addEventListener('mouseup',e=>{
-    if(mouseStart==null)return; const dx=e.clientX-mouseStart;
-    if(Math.abs(dx)>40) changeTileImage(item,t,dx>0?-1:1);
-    mouseStart=null;
+  imgwrap.addEventListener('mousedown', e=>{ mouseStart = e.clientX; });
+  imgwrap.addEventListener('mouseup', e=>{
+    if (mouseStart==null) return;
+    const dx = e.clientX - mouseStart;
+    if (Math.abs(dx) > 40) changeTileImage(item, t, dx>0 ? -1 : 1);
+    mouseStart = null;
   });
+
+  // open overlay
+  t.addEventListener('click', ()=> openOverlay(item, parseInt(t.dataset.index, 10) || 0));
 
   return t;
 }
 
-function changeTileImage(item,tile,delta){
-  const n=item.imageUrls.length, idx=(+tile.dataset.index||0), next=(idx+delta+n)%n;
-  tile.dataset.index=String(next);
-  tile.querySelector('img').src=imageUrlAt(item,next,800);
+function changeTileImage(item, tile, delta){
+  const n = item.imageUrls.length;
+  const idx = parseInt(tile.dataset.index,10) || 0;
+  const next = (idx + delta + n) % n;
+  tile.dataset.index = String(next);
+  const img = tile.querySelector('img');
+  // swap to next thumb; lazy-load if needed
+  const nextUrl = imageUrlAt(item, next, 400);
+  if (img.dataset.src !== nextUrl) {
+    img.dataset.src = nextUrl; lazyObserver.observe(img);
+  }
 }
 
-function openOverlay(item,index=0){
-  overlay.style.display='flex';
-  ovTitle.textContent=`${item.token} (${index+1}/${item.imageUrls.length})`;
-  ovImg.src=imageUrlAt(item,index,2000);
-  let startX=null;
-  ovImg.ontouchstart=e=>{startX=e.touches[0].clientX;};
-  ovImg.ontouchmove=e=>{
-    if(startX==null)return; const dx=e.touches[0].clientX-startX;
-    if(Math.abs(dx)>40){
-      index=(index+(dx>0?-1:1)+item.imageUrls.length)%item.imageUrls.length;
-      ovTitle.textContent=`${item.token} (${index+1}/${item.imageUrls.length})`;
-      ovImg.src=imageUrlAt(item,index,2000);
-      startX=e.touches[0].clientX;
+function openOverlay(item, index=0){
+  overlay.style.display = 'flex';
+  ovTitle.textContent = `${item.token} (${index+1}/${item.imageUrls.length})`;
+  ovImg.src = imageUrlAt(item, index, 1600);
+
+  let startX = null;
+  ovImg.ontouchstart = e => { startX = e.touches[0].clientX; };
+  ovImg.ontouchmove = e => {
+    if (startX==null) return;
+    const dx = e.touches[0].clientX - startX;
+    if (Math.abs(dx) > 40) {
+      index = (index + (dx>0?-1:1) + item.imageUrls.length) % item.imageUrls.length;
+      ovTitle.textContent = `${item.token} (${index+1}/${item.imageUrls.length})`;
+      ovImg.src = imageUrlAt(item, index, 1600);
+      startX = e.touches[0].clientX;
     }
   };
 }
-ovClose.onclick=()=>{ overlay.style.display='none'; };
-btnBuy.onclick=()=>alert('Buy flow coming soon');
-btnRent.onclick=()=>alert('Rent flow coming soon');
 
-// ====== boot ======
-(async function boot(){
-  try{
-    const res = await fetch(API, { cache:'no-store' });
-    const items = await res.json();
-    if(!Array.isArray(items) || !items.length){
-      grid.innerHTML='<div style="grid-column:1/-1;padding:16px;color:#aaa;">No items found.</div>';
-      return;
+// Lazy load observer
+const lazyObserver = new IntersectionObserver((entries)=>{
+  for (const ent of entries) {
+    if (ent.isIntersecting) {
+      const img = ent.target;
+      if (img.dataset.src) { img.src = img.dataset.src; img.removeAttribute('data-src'); }
+      lazyObserver.unobserve(img);
     }
-    items.forEach(it=>grid.appendChild(makeTile(it)));
-  }catch(err){
-    grid.innerHTML='<div style="grid-column:1/-1;padding:16px;color:#f77;">Failed to load items.</div>';
-    console.error(err);
   }
-})();
+}, { rootMargin: '300px' });
+
+// Infinite scroll (paged fetch)
+let nextPage = 1;
+let loading = false;
+let hasMore = true;
+
+const sentinel = document.getElementById('sentinel');
+const pageObserver = new IntersectionObserver(async (entries)=>{
+  if (!entries.some(e => e.isIntersecting)) return;
+  if (loading || !hasMore) return;
+  loading = true;
+  try {
+    const url = `${EXEC}?api=items&page=${nextPage}&pageSize=${PAGE_SIZE}`;
+    const res = await fetch(url, { cache:'no-store' });
+    const data = await res.json();
+    if (Array.isArray(data.items)) {
+      data.items.forEach(item => grid.appendChild(makeTile(item)));
+    }
+    hasMore = !!data.hasMore;
+    nextPage += 1;
+    if (!hasMore) pageObserver.unobserve(sentinel);
+  } catch (err) {
+    console.error('Page load failed', err);
+  } finally {
+    loading = false;
+  }
+}, { rootMargin: '800px' });
+
+// boot: observe sentinel to trigger first load
+pageObserver.observe(sentinel);
 </script>
 </body>
 </html>
