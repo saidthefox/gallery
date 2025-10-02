@@ -5,18 +5,18 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Rescued.Art — Available</title>
 <style>
-  :root { --gap: 10px; --bg:#0b0b0c; --tile:#151517; --fg:#f3f3f4; --accent:#0a7; }
-  * { box-sizing: border-box; }
-  body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; color:var(--fg); background:var(--bg); }
+  :root { --gap:10px; --bg:#0b0b0c; --tile:#151517; --fg:#f3f3f4; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; color:var(--fg); background:var(--bg); }
   header { position:sticky; top:0; z-index:10; padding:12px 16px; background:linear-gradient(#111,#0b0b0c); border-bottom:1px solid #222; }
   h1 { margin:0; font-size:1.1rem; letter-spacing:.4px; }
-  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:var(--gap); padding:var(--gap); }
-  .tile { background:var(--tile); border-radius:14px; overflow:hidden; position:relative; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:var(--gap); padding:var(--gap); }
+  .tile { background:#151517; border-radius:14px; overflow:hidden; position:relative; }
   .tile .imgwrap { position:relative; width:100%; padding-top:100%; overflow:hidden; background:#0f0f12; }
   .tile img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition:transform 120ms ease; }
   .tile:hover img { transform:scale(1.02); }
   .meta { padding:10px 12px; font-size:.9rem; color:#c9c9cf; display:flex; justify-content:space-between; align-items:center; }
-  .token { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size:.88rem; color:#9ed9c9; }
+  .token { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace; font-size:.88rem; color:#9ed9c9; }
   .count { font-size:.8rem; color:#aaa; }
   .overlay { position:fixed; inset:0; background:rgba(0,0,0,.65); display:none; align-items:center; justify-content:center; }
   .sheet { background:#0f0f12; border:1px solid #2a2a2e; border-radius:16px; padding:16px; width:min(520px,92vw); color:#eaeaf0; }
@@ -24,11 +24,9 @@
   .sheet .bigimg { width:100%; height:48vh; object-fit:contain; background:#0b0b0c; border-radius:10px; }
   .actions { display:flex; gap:10px; margin-top:12px; }
   .btn { flex:1; padding:12px; border-radius:12px; border:1px solid #2b2b30; background:#18181b; color:#fff; font-weight:600; cursor:pointer; }
-  .btn.buy { background:#0a7; border-color:#0a7; }
-  .btn.rent { background:#2d2d33; }
   .close { border:none; background:#222; color:#ccc; padding:6px 10px; border-radius:8px; cursor:pointer; }
   .hint { position:absolute; right:8px; top:8px; background:rgba(0,0,0,.45); color:#eee; font-size:.75rem; padding:4px 6px; border-radius:8px; }
-  .sentinel { height: 1px; }
+  .sentinel { height:1px; }
 </style>
 </head>
 <body>
@@ -43,8 +41,8 @@
       <h2><span id="ov-title">Item</span><button id="ov-close" class="close">Close</button></h2>
       <img id="ov-img" class="bigimg" alt="">
       <div class="actions">
-        <button class="btn buy" id="btn-buy">Buy</button>
-        <button class="btn rent" id="btn-rent">Rent</button>
+        <button class="btn" id="btn-buy">Buy</button>
+        <button class="btn" id="btn-rent">Rent</button>
       </div>
     </div>
   </div>
@@ -55,85 +53,83 @@ const EXEC = 'https://script.google.com/macros/s/AKfycbzXYKl5Wi1iOplK9d4mZNHtg-H
 const PAGE_SIZE = 24;
 
 // ===== helpers =====
-const $ = sel => document.querySelector(sel);
-const grid = $('#grid');
-const overlay = $('#overlay');
-const ovImg = $('#ov-img');
-const ovTitle = $('#ov-title');
-$('#ov-close').onclick = () => overlay.style.display = 'none';
-$('#btn-buy').onclick = () => alert('Buy flow coming soon');
-$('#btn-rent').onclick = () => alert('Rent flow coming soon');
+const grid = document.getElementById('grid');
+const sentinel = document.getElementById('sentinel');
+const overlay = document.getElementById('overlay');
+const ovImg = document.getElementById('ov-img');
+const ovTitle = document.getElementById('ov-title');
+document.getElementById('ov-close').onclick = () => overlay.style.display = 'none';
+document.getElementById('btn-buy').onclick = () => alert('Buy flow coming soon');
+document.getElementById('btn-rent').onclick = () => alert('Rent flow coming soon');
 
 function fileIdFromUc(url){ const m=(url||'').match(/[?&]id=([^&]+)/); return m?m[1]:''; }
-function lh3Url(fileId,width=1600){ return fileId?`https://lh3.googleusercontent.com/d/${fileId}=w${width}`:''; }
-function imageUrlAt(item,idx,w=1600){ return lh3Url(fileIdFromUc(item.imageUrls[idx] || ''), w); }
+function lh3Url(id,w=1600){ return id ? `https://lh3.googleusercontent.com/d/${id}=w${w}` : ''; }
+function imageUrlAt(item,i,w=1600){ return lh3Url(fileIdFromUc(item.imageUrls[i] || ''), w); }
 
-// Only set img.src when visible
-function lazyImg(img, src){
-  img.dataset.src = src;
-  lazyObserver.observe(img);
-}
+// Lazy images (thumbs)
+const lazyObserver = new IntersectionObserver((entries)=>{
+  for (const ent of entries) {
+    if (ent.isIntersecting) {
+      const img = ent.target;
+      if (img.dataset.src) { img.src = img.dataset.src; img.removeAttribute('data-src'); }
+      lazyObserver.unobserve(img);
+    }
+  }
+}, { rootMargin: '300px' });
 
+function lazyThumb(img, src){ img.dataset.src = src; lazyObserver.observe(img); }
+
+// Build a tile
 function makeTile(item){
   const t = document.createElement('div'); t.className='tile'; t.dataset.token=item.token; t.dataset.index='0';
 
   const imgwrap = document.createElement('div'); imgwrap.className='imgwrap';
   const img = document.createElement('img');
-  // thumbnail only (fast)
-  lazyImg(img, imageUrlAt(item, 0, 400));
+  lazyThumb(img, imageUrlAt(item, 0, 400)); // small thumb first
   img.alt = item.token; img.loading='lazy'; img.decoding='async';
-
   const hint = document.createElement('div'); hint.className='hint';
   hint.textContent = `${item.count} photo${item.count>1?'s':''} — swipe`;
-  imgwrap.append(img, hint);
-  t.append(imgwrap);
+  imgwrap.append(img, hint); t.append(imgwrap);
 
   const meta = document.createElement('div'); meta.className='meta';
   meta.innerHTML = `<span class="token">${item.token}</span><span class="count">${item.count}</span>`;
   t.append(meta);
 
-  // swipe/drag to cycle
-  let startX = null;
-  imgwrap.addEventListener('touchstart', e=>{ startX = e.touches[0].clientX; }, {passive:true});
-  imgwrap.addEventListener('touchmove', e=>{
-    if (startX==null) return;
-    const dx = e.touches[0].clientX - startX;
-    if (Math.abs(dx) > 40) { changeTileImage(item, t, dx>0 ? -1 : 1); startX = e.touches[0].clientX; }
-  }, {passive:true});
-  let mouseStart=null;
-  imgwrap.addEventListener('mousedown', e=>{ mouseStart = e.clientX; });
-  imgwrap.addEventListener('mouseup', e=>{
-    if (mouseStart==null) return;
-    const dx = e.clientX - mouseStart;
-    if (Math.abs(dx) > 40) changeTileImage(item, t, dx>0 ? -1 : 1);
-    mouseStart = null;
+  // swipe/drag
+  let startX=null, mouseStart=null;
+  imgwrap.addEventListener('touchstart',e=>{startX=e.touches[0].clientX;},{passive:true});
+  imgwrap.addEventListener('touchmove',e=>{
+    if(startX==null) return;
+    const dx=e.touches[0].clientX-startX;
+    if(Math.abs(dx)>40){ changeTileImage(item,t,dx>0?-1:1); startX=e.touches[0].clientX; }
+  },{passive:true});
+  imgwrap.addEventListener('mousedown',e=>{mouseStart=e.clientX;});
+  imgwrap.addEventListener('mouseup',e=>{
+    if(mouseStart==null) return;
+    const dx=e.clientX-mouseStart;
+    if(Math.abs(dx)>40) changeTileImage(item,t,dx>0?-1:1);
+    mouseStart=null;
   });
 
-  // open overlay
-  t.addEventListener('click', ()=> openOverlay(item, parseInt(t.dataset.index, 10) || 0));
-
+  t.addEventListener('click',()=>openOverlay(item, +t.dataset.index||0));
   return t;
 }
 
-function changeTileImage(item, tile, delta){
+function changeTileImage(item,tile,delta){
   const n = item.imageUrls.length;
-  const idx = parseInt(tile.dataset.index,10) || 0;
+  const idx = +tile.dataset.index || 0;
   const next = (idx + delta + n) % n;
   tile.dataset.index = String(next);
   const img = tile.querySelector('img');
-  // swap to next thumb; lazy-load if needed
   const nextUrl = imageUrlAt(item, next, 400);
-  if (img.dataset.src !== nextUrl) {
-    img.dataset.src = nextUrl; lazyObserver.observe(img);
-  }
+  if (img.dataset.src !== nextUrl) { img.dataset.src = nextUrl; lazyObserver.observe(img); }
 }
 
-function openOverlay(item, index=0){
-  overlay.style.display = 'flex';
+function openOverlay(item,index=0){
+  overlay.style.display='flex';
   ovTitle.textContent = `${item.token} (${index+1}/${item.imageUrls.length})`;
   ovImg.src = imageUrlAt(item, index, 1600);
-
-  let startX = null;
+  let startX=null;
   ovImg.ontouchstart = e => { startX = e.touches[0].clientX; };
   ovImg.ontouchmove = e => {
     if (startX==null) return;
@@ -147,33 +143,20 @@ function openOverlay(item, index=0){
   };
 }
 
-// Lazy load observer
-const lazyObserver = new IntersectionObserver((entries)=>{
-  for (const ent of entries) {
-    if (ent.isIntersecting) {
-      const img = ent.target;
-      if (img.dataset.src) { img.src = img.dataset.src; img.removeAttribute('data-src'); }
-      lazyObserver.unobserve(img);
-    }
-  }
-}, { rootMargin: '300px' });
-
-// Infinite scroll (paged fetch)
+// ===== paging =====
 let nextPage = 1;
-let loading = false;
 let hasMore = true;
+let loading = false;
 
-const sentinel = document.getElementById('sentinel');
-const pageObserver = new IntersectionObserver(async (entries)=>{
-  if (!entries.some(e => e.isIntersecting)) return;
+async function loadNextPage({nocache=false} = {}) {
   if (loading || !hasMore) return;
   loading = true;
   try {
-    const url = `${EXEC}?api=items&page=${nextPage}&pageSize=${PAGE_SIZE}`;
-    const res = await fetch(url, { cache:'no-store' });
+    const url = `${EXEC}?api=items&page=${nextPage}&pageSize=${PAGE_SIZE}${nocache?'&nocache=1':''}`;
+    const res = await fetch(url, { cache: 'no-store' });
     const data = await res.json();
     if (Array.isArray(data.items)) {
-      data.items.forEach(item => grid.appendChild(makeTile(item)));
+      data.items.forEach(it => grid.appendChild(makeTile(it)));
     }
     hasMore = !!data.hasMore;
     nextPage += 1;
@@ -183,10 +166,18 @@ const pageObserver = new IntersectionObserver(async (entries)=>{
   } finally {
     loading = false;
   }
+}
+
+// Infinite scroll observer
+const pageObserver = new IntersectionObserver((entries)=>{
+  if (entries.some(e => e.isIntersecting)) loadNextPage();
 }, { rootMargin: '800px' });
 
-// boot: observe sentinel to trigger first load
-pageObserver.observe(sentinel);
+// Boot: eager load page 1 (bypass cache once), then start infinite scroll
+(async function boot(){
+  await loadNextPage({ nocache: true }); // force a fresh scan the first time
+  pageObserver.observe(sentinel);
+})();
 </script>
 </body>
 </html>
