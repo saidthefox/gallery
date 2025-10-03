@@ -71,7 +71,7 @@
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbzXYKl5Wi1iOplK9d4mZNHtg-H70H9lb07JkitkPrl0Zb7pVoh8sPYWTxzicUtlE-a4/exec';
 
-  <script src="gallery.js"></script>
+  
     async function fetchItems() {
       const res = await fetch(API_URL);
       const data = await res.json();
@@ -91,5 +91,6 @@
 
     fetchItems();
   </script>
+  <script src="gallery.js"></script>
 </body>
 </html>
