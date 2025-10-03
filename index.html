@@ -32,23 +32,23 @@
     const API_URL = 'https://script.google.com/macros/s/AKfycbzXYKl5Wi1iOplK9d4mZNHtg-H70H9lb07JkitkPrl0Zb7pVoh8sPYWTxzicUtlE-a4/exec';
 
     // --- JSONP loader (avoids CORS entirely) ---
-    function jsonp(url) {
-      return new Promise((resolve, reject) => {
-        const cb = 'cb_' + Math.random().toString(36).slice(2);
-        const s  = document.createElement('script');
-        const sep = url.includes('?') ? '&' : '?';
-        s.src = `${url}${sep}callback=${cb}`;
-        s.onerror = () => { cleanup(); reject(new Error('JSONP failed')); };
-        function cleanup(){ delete window[cb]; s.remove(); }
-        window[cb] = (data) => { resolve(data); cleanup(); };
-        document.head.appendChild(s);
-      });
-    }
+     function jsonp(url) {
+    return new Promise((resolve, reject) => {
+      const cb = 'cb_' + Math.random().toString(36).slice(2);
+      const s  = document.createElement('script');
+      const sep = url.includes('?') ? '&' : '?';
+      s.src = `${url}${sep}callback=${cb}`;
+      s.onerror = () => { cleanup(); reject(new Error('JSONP failed')); };
+      function cleanup(){ delete window[cb]; s.remove(); }
+      window[cb] = (data) => { resolve(data); cleanup(); };
+      document.head.appendChild(s);
+    });
+  }
 
-    async function loadItems() {
-      const data = await jsonp(API_URL);
-      return (data && data.items) || [];
-    }
+  async function loadItems() {
+    const data = await jsonp(API_URL);
+    return (data && data.items) || [];
+  }
 
     function makeTile(item) {
       const t = document.createElement('div');
