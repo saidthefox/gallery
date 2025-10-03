@@ -2,71 +2,127 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#000000" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0b0c" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icons/rescued-art-192.png" />
   <title>RESCUED.ART</title>
   <style>
-    body {
-      margin: 0;
-      background: #000;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      color: #fff;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 4px; /* small gap */
-      padding: 4px;
-    }
-    .tile {
-      position: relative;
-      overflow: hidden;
-      background: #111;
-      aspect-ratio: 1/1;
-    }
-    .tile img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-    .photos-count {
-      position: absolute;
-      top: 4px;
-      left: 4px;
-      background: rgba(0,0,0,0.6);
-      padding: 2px 6px;
-      font-size: 12px;
-      border-radius: 3px;
-    }
+    :root { --gap: 4px; --bg:#0b0b0c; --fg:#f3f3f4; --tile:#121214; }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body { margin: 0; background: var(--bg); color: var(--fg);
+           font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif; }
+    main { padding: var(--gap); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--gap); }
+    .tile { background: var(--tile); position: relative; overflow: hidden; border-radius: 0; }
+    .imgwrap { position: relative; width: 100%; padding-top: 100%; overflow: hidden; background:#0e0e10; }
+    .tile img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; touch-action: pan-y; }
+    .hint { position: absolute; left: 6px; top: 6px; background: rgba(0,0,0,.55); color:#eee;
+            padding: 2px 6px; font-size: 12px; border-radius: 6px; }
   </style>
 </head>
 <body>
-  <div class="grid" id="gallery"></div>
+  <main>
+    <div id="grid" class="grid" aria-live="polite"></div>
+  </main>
 
   <script>
+    // === CONFIG: your Apps Script web app URL (the /exec one) ===
     const API_URL = 'https://script.google.com/macros/s/AKfycbzXYKl5Wi1iOplK9d4mZNHtg-H70H9lb07JkitkPrl0Zb7pVoh8sPYWTxzicUtlE-a4/exec';
 
-    async function fetchItems() {
-      const res = await fetch(API_URL);
-      const data = await res.json();
-      if (!data.ok) return;
-      const grid = document.getElementById('gallery');
-      grid.innerHTML = '';
-      data.items.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'tile';
-        div.innerHTML = `
-          <div class="photos-count">${item.count} photos — swipe</div>
-          <img src="${item.coverUrl}" alt="">
-        `;
-        grid.appendChild(div);
+    // --- JSONP loader (avoids CORS entirely) ---
+    function jsonp(url) {
+      return new Promise((resolve, reject) => {
+        const cb = 'cb_' + Math.random().toString(36).slice(2);
+        const s  = document.createElement('script');
+        const sep = url.includes('?') ? '&' : '?';
+        s.src = `${url}${sep}callback=${cb}`;
+        s.onerror = () => { cleanup(); reject(new Error('JSONP failed')); };
+        function cleanup(){ delete window[cb]; s.remove(); }
+        window[cb] = (data) => { resolve(data); cleanup(); };
+        document.head.appendChild(s);
       });
     }
 
-    fetchItems();
+    async function loadItems() {
+      const data = await jsonp(API_URL);
+      return (data && data.items) || [];
+    }
+
+    function makeTile(item) {
+      const t = document.createElement('div');
+      t.className = 'tile';
+      t.dataset.index = '0';
+
+      const w = document.createElement('div');
+      w.className = 'imgwrap';
+
+      const im = document.createElement('img');
+      im.src = item.coverUrl;
+      im.alt = '';
+      im.loading = 'lazy';
+
+      const hint = document.createElement('div');
+      hint.className = 'hint';
+      hint.textContent = `${item.count} photo${item.count>1?'s':''} — swipe`;
+
+      w.appendChild(im);
+      w.appendChild(hint);
+      t.appendChild(w);
+
+      // swipe in-tile to change image
+      let startX = null;
+      w.addEventListener('touchstart', (e)=>{ startX = e.touches[0].clientX; }, {passive:true});
+      w.addEventListener('touchmove', (e)=>{
+        if (startX == null) return;
+        const dx = e.touches[0].clientX - startX;
+        if (Math.abs(dx) > 40) {
+          changeImage(item, t, dx > 0 ? -1 : 1);
+          startX = e.touches[0].clientX; // continuous swipe
+        }
+      }, {passive:true});
+
+      // mouse drag (desktop)
+      let mouseStart = null;
+      w.addEventListener('mousedown', (e)=>{ mouseStart = e.clientX; });
+      w.addEventListener('mouseup', (e)=>{
+        if (mouseStart == null) return;
+        const dx = e.clientX - mouseStart;
+        if (Math.abs(dx) > 40) changeImage(item, t, dx > 0 ? -1 : 1);
+        mouseStart = null;
+      });
+
+      return t;
+    }
+
+    function changeImage(item, tile, delta) {
+      const imgs = item.imageUrls;
+      let i = parseInt(tile.dataset.index, 10) || 0;
+      i = (i + delta + imgs.length) % imgs.length;
+      tile.dataset.index = String(i);
+      const im = tile.querySelector('img');
+      im.src = imgs[i];
+    }
+
+    (async () => {
+      try {
+        const items = await loadItems();
+        const grid = document.getElementById('grid');
+        grid.innerHTML = '';
+        items.forEach(it => grid.appendChild(makeTile(it)));
+      } catch (e) {
+        console.error(e);
+        document.getElementById('grid').textContent = 'Failed to load.';
+      }
+    })();
+
+    // PWA (optional; pass-through SW)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(()=>{});
+      });
+    }
   </script>
 </body>
 </html>
