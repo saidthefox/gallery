@@ -24,31 +24,32 @@
 </head>
 <body>
   <main>
-    <div id="grid" class="grid" aria-live="polite"></div>
+    <div id="grid" class="grid" aria-live="polite">Loading…</div>
   </main>
 
   <script>
-    // === CONFIG: your Apps Script web app URL (the /exec one) ===
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzXYKl5Wi1iOplK9d4mZNHtg-H70H9lb07JkitkPrl0Zb7pVoh8sPYWTxzicUtlE-a4/exec';
+    // Your Apps Script /exec URL (the one you updated above)
+    const API_URL =
+      'https://script.google.com/macros/s/AKfycbzXYKl5Wi1iOplK9d4mZNHtg-H70H9lb07JkitkPrl0Zb7pVoh8sPYWTxzicUtlE-a4/exec';
 
-    // --- JSONP loader (avoids CORS entirely) ---
-     function jsonp(url) {
-    return new Promise((resolve, reject) => {
-      const cb = 'cb_' + Math.random().toString(36).slice(2);
-      const s  = document.createElement('script');
-      const sep = url.includes('?') ? '&' : '?';
-      s.src = `${url}${sep}callback=${cb}`;
-      s.onerror = () => { cleanup(); reject(new Error('JSONP failed')); };
-      function cleanup(){ delete window[cb]; s.remove(); }
-      window[cb] = (data) => { resolve(data); cleanup(); };
-      document.head.appendChild(s);
-    });
-  }
+    // JSONP loader (CORS-free)
+    function jsonp(url) {
+      return new Promise((resolve, reject) => {
+        const cb = 'cb_' + Math.random().toString(36).slice(2);
+        const s  = document.createElement('script');
+        const sep = url.includes('?') ? '&' : '?';
+        s.src = `${url}${sep}callback=${cb}`;
+        s.onerror = () => { cleanup(); reject(new Error('JSONP failed')); };
+        function cleanup(){ delete window[cb]; s.remove(); }
+        window[cb] = (data) => { resolve(data); cleanup(); };
+        document.head.appendChild(s);
+      });
+    }
 
-  async function loadItems() {
-    const data = await jsonp(API_URL);
-    return (data && data.items) || [];
-  }
+    async function loadItems() {
+      const data = await jsonp(API_URL);
+      return (data && data.items) || [];
+    }
 
     function makeTile(item) {
       const t = document.createElement('div');
@@ -71,16 +72,13 @@
       w.appendChild(hint);
       t.appendChild(w);
 
-      // swipe in-tile to change image
+      // swipe within tile
       let startX = null;
       w.addEventListener('touchstart', (e)=>{ startX = e.touches[0].clientX; }, {passive:true});
       w.addEventListener('touchmove', (e)=>{
         if (startX == null) return;
         const dx = e.touches[0].clientX - startX;
-        if (Math.abs(dx) > 40) {
-          changeImage(item, t, dx > 0 ? -1 : 1);
-          startX = e.touches[0].clientX; // continuous swipe
-        }
+        if (Math.abs(dx) > 40) { changeImage(item, t, dx > 0 ? -1 : 1); startX = e.touches[0].clientX; }
       }, {passive:true});
 
       // mouse drag (desktop)
@@ -101,8 +99,7 @@
       let i = parseInt(tile.dataset.index, 10) || 0;
       i = (i + delta + imgs.length) % imgs.length;
       tile.dataset.index = String(i);
-      const im = tile.querySelector('img');
-      im.src = imgs[i];
+      tile.querySelector('img').src = imgs[i];
     }
 
     (async () => {
@@ -117,7 +114,7 @@
       }
     })();
 
-    // PWA (optional; pass-through SW)
+    // PWA (pass-through SW)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').catch(()=>{});
