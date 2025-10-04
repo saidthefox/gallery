@@ -1,46 +1,82 @@
-/* --- desktop glass arrows inside overlay --- */
-.viewer { position:relative; width:100%; height:min(78vh, 72vw); background:#0b0b0c;
-          display:flex; align-items:center; justify-content:center; }
-.ov-arrow {
-  position:absolute; top:50%; transform:translateY(-50%);
-  padding:12px 14px;
-  background:rgba(255,255,255,0.12);
-  border:1px solid rgba(255,255,255,0.18);
-  backdrop-filter: blur(8px);
-  cursor:pointer; user-select:none;
+:root {
+  /* keep the outer padding as-is (10px), but we’ll shrink only the gaps */
+  --gap: 10px;
+  --bg:#0b0b0c; --tile:#151517; --fg:#f3f3f4; --accent:#0a7;
 }
-.ov-arrow.left { left:10px; }
-.ov-arrow.right { right:10px; }
-.ov-arrow svg { width:18px; height:18px; }
-@media (pointer: coarse) { .ov-arrow { display:none; } }
 
-/* --- desktop glass arrows on tiles (you already added grid gap/meta tweaks) --- */
+* { box-sizing: border-box; }
+body { margin:0; color:var(--fg); background:var(--bg);
+       font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; }
+
+header { position:sticky; top:0; z-index:10; padding:12px 16px;
+         background:linear-gradient(#111,#0b0b0c); border-bottom:1px solid #222; }
+h1 { margin:0; font-size:1.1rem; letter-spacing:.4px; }
+
+/* ↓ Keep padding the same (10px), but make the gap smaller (6px) */
+.grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+  gap:6px;          /* was var(--gap); now tighter between tiles */
+  padding:10px;     /* keep side padding exactly as you liked it */
+}
+
+.tile { background:var(--tile); /* border-radius removed earlier if desired */
+        overflow:hidden; position:relative; }
+.imgwrap { position:relative; width:100%; padding-top:100%; overflow:hidden; background:#0f0f12; }
+.tile img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition:transform 120ms ease; }
+.tile:hover img { transform:scale(1.02); }
+
+/* Hide the bottom “X photos” row entirely */
+.meta { display:none !important; }
+
+/* Keep the little hint at the top inside the tile */
+.hint {
+  position:absolute; right:8px; top:8px;
+  background:rgba(0,0,0,.45); color:#eee;
+  font-size:.75rem; padding:4px 6px;
+  /* border-radius removed earlier if desired */
+}
+
+/* sentinel for infinite scroll */
+.sentinel { height:1px; }
+
+/* Overlay styles (unchanged functionally) */
+.overlay { position:fixed; inset:0; background:rgba(0,0,0,.65); display:none; align-items:center; justify-content:center; }
+.sheet { background:#0f0f12; border:1px solid #2a2a2e; /* border-radius removed earlier if desired */
+         padding:16px; width:min(520px,92vw); color:#eaeaf0; }
+.sheet h2 { margin:0 0 8px 0; font-size:1.05rem; display:flex; justify-content:space-between; align-items:center; }
+.bigimg { width:100%; height:48vh; object-fit:contain; background:#0b0b0c; /* border-radius removed earlier if desired */ }
+.actions { display:flex; gap:10px; margin-top:12px; }
+.btn { flex:1; padding:12px; border-radius:12px; border:1px solid #2b2b30; background:#18181b;
+       color:#fff; font-weight:600; cursor:pointer; }
+.btn.buy { background:#0a7; border-color:#0a7; }
+.btn.rent { background:#2d2d33; }
+.close { border:none; background:#222; color:#ccc; padding:6px 10px; border-radius:8px; cursor:pointer; }
+
+/* If you don’t want Buy/Rent visible but need them to exist for gallery.js, hide them: */
+/* .actions, .btn.buy, .btn.rent { display:none !important; } */
+
+/* --- Desktop "glass" arrows for switching photos --- */
 .tile .arrow {
-  position:absolute; top:50%; transform:translateY(-50%);
-  padding:10px 12px;
-  background:rgba(255,255,255,0.12);
-  border:1px solid rgba(255,255,255,0.18);
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   backdrop-filter: blur(8px);
-  cursor:pointer; user-select:none; opacity:0; transition:opacity 150ms ease;
+  cursor: pointer;
+  user-select: none;
+  opacity: 0;
+  transition: opacity 150ms ease;
 }
-.tile:hover .arrow { opacity:1; }
-.tile .arrow.left { left:6px; }
-.tile .arrow.right { right:6px; }
-.tile .arrow svg { width:16px; height:16px; display:block; color:#fff; }
-@media (pointer: coarse) { .tile .arrow { display:none; } }
+.tile:hover .arrow { opacity: 1; }
 
-/* --- circular loader overlay --- */
-#loader {
-  position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
-  background:rgba(0,0,0,.75); z-index:9999;
-  flex-direction:column; gap:12px;
+.tile .arrow.left { left: 6px; }
+.tile .arrow.right { right: 6px; }
+.tile .arrow svg { width: 16px; height: 16px; display: block; color: #fff; }
+
+/* Hide arrows on touch (mobile/tablet) */
+@media (pointer: coarse) {
+  .tile .arrow { display: none; }
 }
-#loader .ring { width:96px; height:96px; }
-#loader .ring .bg {
-  fill: none; stroke: rgba(255,255,255,0.12); stroke-width: 12;
-}
-#loader .ring .fg {
-  fill: none; stroke: #fff; stroke-width: 12; stroke-linecap: round;
-  transform: rotate(-90deg); transform-origin: 50% 50%;
-}
-#loader .label { font-size: 0.95rem; color:#eaeaf0; letter-spacing:.3px; }
