@@ -26,7 +26,7 @@
     .grid-compact {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 4px;
+      gap: 2px;
       padding: 4px;
     }
     .tile {
@@ -78,7 +78,6 @@
     .ov-controls {
       display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px;
     }
-    .counter { font-size: .95rem; color: #cfd2d9; letter-spacing: .3px; }
 
     /* glass arrows for overlay (desktop only) */
     .ov-arrow {
@@ -111,9 +110,6 @@
     <div id="grid" class="grid" aria-live="polite"></div>
     <div id="sentinel" class="sentinel" aria-hidden="true"></div>
   </main>
-
-  <!-- (Optional) legacy gallery block from your original index; safe to remove if not used -->
-  <div class="grid-compact" id="gallery" hidden></div>
 
   <!-- Overlay / popup -->
   <div id="overlay" class="overlay">
