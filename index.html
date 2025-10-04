@@ -10,41 +10,27 @@
   <title>rescued.art</title>
 </head>
 <body>
-  <!-- Circular loader -->
-  <div id="loader" aria-live="polite">
-    <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
-      <circle class="bg" cx="60" cy="60" r="52"></circle>
-      <circle class="fg" cx="60" cy="60" r="52" stroke-dasharray="326.725" stroke-dashoffset="326.725"></circle>
-    </svg>
-    <div class="label"><span id="loader-pct">0</span>%</div>
-  </div>
-
   <main>
     <div id="grid" class="grid" aria-live="polite"></div>
     <div id="sentinel" class="sentinel" aria-hidden="true"></div>
   </main>
 
-  <!-- Overlay / lightbox -->
   <div id="overlay" class="overlay">
     <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ov-title">
       <h2>
-        <span id="ov-title">Photo</span>
-        <button id="ov-close" class="close" aria-label="Close">Close</button>
+        <span id="ov-title">Item</span>
+        <button id="ov-close" class="close">Close</button>
       </h2>
-
-      <div class="viewer">
-        <!-- desktop glass arrows -->
-        <button class="ov-arrow left" id="ov-prev" aria-label="Previous">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
-        <img id="ov-img" class="bigimg" alt="" />
-        <button class="ov-arrow right" id="ov-next" aria-label="Next">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
-        </button>
+      <img id="ov-img" class="bigimg" alt="" />
+      <div class="actions">
+        <!-- Keep these for gallery.js bindings; hide in CSS if you don't want to show them -->
+        <button class="btn buy" id="btn-buy">Buy</button>
+        <button class="btn rent" id="btn-rent">Rent</button>
       </div>
     </div>
   </div>
 
+  <!-- Your infinite scroll / swipe logic lives here -->
   <script src="gallery.js"></script>
 </body>
 </html>
