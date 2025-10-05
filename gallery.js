@@ -71,6 +71,11 @@ function hideLoader() {
   if (!loader) return;
   loader.style.opacity = '0';
   setTimeout(() => { loader.style.display = 'none'; }, 200);
+  // Reveal the about toggle after loader hides
+  try {
+    document.body.classList.add('about-ready');
+    if (aboutToggle) aboutToggle.removeAttribute('aria-hidden');
+  } catch (e) { /* ignore */ }
 }
 
 // --- helpers ---

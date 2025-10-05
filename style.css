@@ -72,8 +72,9 @@ h1 { margin:0; font-size:1.1rem; letter-spacing:.4px; }
   position:fixed; right:8px; top:48%; z-index:10000; width:40px; height:40px;
   display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.6);
   color:#fff; border:1px solid rgba(255,255,255,0.08); border-radius:20px; cursor:pointer;
+  opacity:0; transform:translateX(8px); pointer-events:none; transition:opacity 220ms ease, transform 220ms ease;
 }
-.about-toggle .chev { display:inline-block; transform:rotate(90deg); font-size:22px; }
+.about-toggle .chev { display:inline-block; transform:none; font-size:22px; }
 
 .about-panel {
   position:fixed; top:0; right:0; bottom:0; width:360px; max-width:90vw; transform:translateX(100%);
@@ -85,3 +86,6 @@ h1 { margin:0; font-size:1.1rem; letter-spacing:.4px; }
 .about-header { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .about-close { background:#222; color:#ddd; border:none; padding:6px 8px; cursor:pointer; }
 .about-content { margin-top:12px; color:#ddd; line-height:1.45; }
+
+/* reveal toggle after initial load */
+body.about-ready .about-toggle { opacity:1; transform:translateX(0); pointer-events:auto; }
