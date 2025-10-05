@@ -18,7 +18,8 @@ document.getElementById('ov-close').onclick = () => overlay.style.display = 'non
 const loader = document.getElementById('loader');
 const loaderPct = document.getElementById('loader-pct');
 const loaderCircle = document.querySelector('#loader .fg');
-const CIRC = 2 * Math.PI * 52; // r=52 (matches CSS/SVG)
+// circumference for r=52 (matches SVG)
+const CIRC = 2 * Math.PI * 52;
 if (loaderCircle) {
   loaderCircle.style.strokeDasharray = CIRC;
   loaderCircle.style.strokeDashoffset = CIRC;
@@ -30,10 +31,10 @@ function setLoader(pct) {
   loaderPct.textContent = Math.round(clamped);
   loaderCircle.style.strokeDashoffset = CIRC * (1 - clamped / 100);
 }
-function hideLoader(){
+function hideLoader() {
   if (!loader) return;
   loader.style.opacity = '0';
-  setTimeout(()=> { loader.style.display = 'none'; }, 200);
+  setTimeout(() => { loader.style.display = 'none'; }, 200);
 }
 
 // --- helpers ---
@@ -41,7 +42,7 @@ function fileIdFromUc(url){ const m=(url||'').match(/[?&]id=([^&]+)/); return m?
 function lh3Url(id,w=1600){ return id ? `https://lh3.googleusercontent.com/d/${id}=w${w}` : ''; }
 function imageUrlAt(item,i,w=1600){ return lh3Url(fileIdFromUc(item.imageUrls[i] || ''), w); }
 
-// Lazy loader
+// Lazy loader (used for pages after the first)
 const lazyObserver = new IntersectionObserver((entries)=>{
   for (const ent of entries) {
     if (!ent.isIntersecting) continue;
@@ -53,21 +54,22 @@ const lazyObserver = new IntersectionObserver((entries)=>{
 function lazyThumb(img, src){ img.dataset.src = src; lazyObserver.observe(img); }
 
 // --- tile factory ---
-function makeTile(item, {eager=false} = {}){
+function makeTile(item, {eager=false} = {}) {
   const t = document.createElement('div'); t.className='tile'; t.dataset.index='0';
 
   const wrap = document.createElement('div'); wrap.className='imgwrap';
   const img = document.createElement('img');
+  img.alt = ''; img.decoding = 'async';
 
   if (eager) {
-    // Important: do NOT use lazy loading on first page, or Safari/Chrome may defer loads.
+    // First page: force actual loading so events fire reliably
     img.loading = 'eager';
+    img.fetchPriority = 'high';
     img.src = imageUrlAt(item, 0, 400);
   } else {
     img.loading = 'lazy';
     lazyThumb(img, imageUrlAt(item, 0, 400));
   }
-  img.alt = ''; img.decoding='async';
 
   const hint = document.createElement('div'); hint.className='hint';
   hint.textContent = `${item.count} photo${item.count>1?'s':''}${isTouch?' — swipe':''}`;
@@ -97,7 +99,7 @@ function makeTile(item, {eager=false} = {}){
     t.append(left, right);
   }
 
-  // Click => overlay (no ID)
+  // Click => overlay
   t.addEventListener('click',()=>openOverlay(item, +t.dataset.index||0));
 
   return { tile: t, imgEl: img };
@@ -113,10 +115,9 @@ function changeTileImage(item,tile,delta){
   if (img.dataset.src !== nextUrl) { img.dataset.src = nextUrl; lazyObserver.observe(img); }
 }
 
-// --- overlay ---
+// --- overlay / lightbox ---
 let currentItem = null;
 let currentIndex = 0;
-
 function updateOverlay(){
   if (!currentItem) return;
   ovImg.src = imageUrlAt(currentItem, currentIndex, 1600);
@@ -127,9 +128,8 @@ function openOverlay(item,index=0){
   overlay.style.display='flex';
   updateOverlay();
 }
-
-ovPrev?.addEventListener('click', ()=>{ if(!currentItem) return; currentIndex = (currentIndex-1+currentItem.imageUrls.length)%currentItem.imageUrls.length; updateOverlay(); });
-ovNext?.addEventListener('click', ()=>{ if(!currentItem) return; currentIndex = (currentIndex+1)%currentItem.imageUrls.length; updateOverlay(); });
+ovPrev?.addEventListener('click', ()=>{ if(!currentItem) return; currentIndex=(currentIndex-1+currentItem.imageUrls.length)%currentItem.imageUrls.length; updateOverlay(); });
+ovNext?.addEventListener('click', ()=>{ if(!currentItem) return; currentIndex=(currentIndex+1)%currentItem.imageUrls.length; updateOverlay(); });
 
 // Mobile swipe inside overlay; keyboard arrows on desktop
 let startX=null;
@@ -143,16 +143,15 @@ ovImg.addEventListener('touchmove', e => {
     startX = e.touches[0].clientX;
   }
 }, { passive:true });
-
 document.addEventListener('keydown', (e)=>{
   if (overlay.style.display !== 'flex') return;
   if (e.key === 'Escape') overlay.style.display = 'none';
   if (!currentItem) return;
-  if (e.key === 'ArrowLeft') { currentIndex = (currentIndex-1+currentItem.imageUrls.length)%currentItem.imageUrls.length; updateOverlay(); }
-  if (e.key === 'ArrowRight') { currentIndex = (currentIndex+1)%currentItem.imageUrls.length; updateOverlay(); }
+  if (e.key === 'ArrowLeft') { currentIndex=(currentIndex-1+currentItem.imageUrls.length)%currentItem.imageUrls.length; updateOverlay(); }
+  if (e.key === 'ArrowRight') { currentIndex=(currentIndex+1)%currentItem.imageUrls.length; updateOverlay(); }
 });
 
-// ---- paging + robust first-page loader ----
+// ---- paging + bulletproof first-page progress ----
 let nextPage = 1, hasMore = true, loading = false;
 let firstPageTracked = false;
 
@@ -164,62 +163,75 @@ async function loadNextPage({nocache=false} = {}) {
     const res = await fetch(url, { cache:'no-store' });
     const data = await res.json();
 
-    const eager = nextPage === 1; // eagerly load first page so images actually fire 'load'
+    const eager = nextPage === 1; // only the very first page participates in loader
     const imgsToTrack = [];
 
     if (Array.isArray(data.items) && data.items.length) {
       data.items.forEach(it => {
-        const { tile, imgEl } = makeTile(it, {eager});
+        const { tile, imgEl } = makeTile(it, { eager });
         grid.appendChild(tile);
         if (eager) imgsToTrack.push(imgEl);
       });
-    } else if (eager) {
-      // No items on first page — don't leave the loader up
-      hideLoader();
-      firstPageTracked = true;
     }
 
+    // first page progress tracking
     if (eager && !firstPageTracked) {
       firstPageTracked = true;
-      await trackFirstPageLoads(imgsToTrack);
+      await trackFirstPage(imgsToTrack);
     }
 
     hasMore = !!data.hasMore; nextPage += 1;
     if (!hasMore) pageObserver.unobserve(sentinel);
   } catch (err) {
     console.error('Page load failed', err);
+    // Don’t leave the loader up if the request fails
     if (!firstPageTracked) hideLoader();
   } finally {
     loading = false;
   }
 }
 
-function trackFirstPageLoads(imgEls){
-  return new Promise((resolve)=>{
-    const total = imgEls.length;
+/** Waits for first-page thumbnails to be decoded/loaded, with robust fallbacks. */
+async function trackFirstPage(imgEls) {
+  // No images? Dismiss quickly.
+  if (!imgEls || !imgEls.length) { setLoader(100); hideLoader(); return; }
 
-    // If there are no images to wait for, bail out immediately.
-    if (!total) { hideLoader(); resolve(); return; }
+  let done = 0, total = imgEls.length;
+  setLoader(1); // nudge off 0% so you see movement
 
-    let done = 0;
-    const bump = () => {
-      done++;
-      setLoader((done / total) * 100);
-      if (done >= total) { hideLoader(); resolve(); }
-    };
+  // helper that resolves on decode or load/error, with a per-image timeout
+  const waitFor = (img, timeoutMs = 7000) => {
+    // already ready (from cache)
+    if (img.complete && img.naturalWidth > 0) return Promise.resolve();
 
-    imgEls.forEach(img=>{
-      if (img.complete && img.naturalWidth > 0) {
-        bump();
-      } else {
-        img.addEventListener('load', bump, { once:true });
-        img.addEventListener('error', bump, { once:true }); // count errors too
-      }
+    // prefer decode() when available (Safari 15+, Chrome, etc.)
+    let settled = false;
+    const end = () => { if (!settled) settled = true; };
+    const pDecode = (img.decode ? img.decode() : Promise.reject());
+
+    const pEvents = new Promise((resolve) => {
+      const onEnd = () => { end(); resolve(); };
+      img.addEventListener('load', onEnd, { once:true });
+      img.addEventListener('error', onEnd, { once:true });
     });
 
-    // Nudge from 0% so it feels alive
-    setLoader(Math.min(10, (done/total)*100 || 5));
-  });
+    const pTimeout = new Promise((resolve) => setTimeout(() => { end(); resolve(); }, timeoutMs));
+
+    // whichever happens first
+    return Promise.race([pDecode.catch(()=>{}), pEvents, pTimeout]);
+  };
+
+  for (const img of imgEls) {
+    // ensure the same URL is requested (sometimes dataset vs src differs)
+    if (!img.src) img.src = img.dataset?.src || img.getAttribute('src');
+
+    // Wait per image, update progress incrementally
+    try { await waitFor(img); } catch (_) {}
+    done++;
+    setLoader((done / total) * 100);
+  }
+
+  hideLoader();
 }
 
 const pageObserver = new IntersectionObserver((entries)=>{
@@ -227,12 +239,12 @@ const pageObserver = new IntersectionObserver((entries)=>{
 }, { rootMargin:'800px' });
 
 (async function boot(){
-  // Safety: if something goes terribly wrong, auto-hide loader after 8s
-  const safety = setTimeout(()=>{ if (!document.hidden) hideLoader(); }, 8000);
+  // Absolute fallback: never let the loader sit forever.
+  const hardFail = setTimeout(() => hideLoader(), 9000);
 
   await loadNextPage({ nocache: true });
   pageObserver.observe(sentinel);
 
-  // If we reached here and first page completed, remove safety.
-  setTimeout(()=> clearTimeout(safety), 9000);
+  // If first page finished, remove the hard fail (no-op if already hidden)
+  setTimeout(() => clearTimeout(hardFail), 10000);
 })();
