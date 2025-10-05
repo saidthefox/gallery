@@ -41,6 +41,24 @@
     </div>
   </div>
 
+  <!-- About slide-out toggle + panel -->
+  <button id="about-toggle" class="about-toggle" aria-controls="about-panel" aria-expanded="false" aria-label="Open about panel">
+    <span class="chev" aria-hidden="true">›</span>
+  </button>
+
+  <aside id="about-panel" class="about-panel" role="complementary" aria-hidden="true">
+    <div class="about-sheet">
+      <header class="about-header">
+        <h2>About</h2>
+        <button id="about-close" class="about-close" aria-label="Close about">Close</button>
+      </header>
+      <div id="about-content" class="about-content">
+        <!-- Type your about text here. Edit the element with id="about-content" in index.html to replace this placeholder. -->
+        <p>Replace this paragraph with your 'about' content. You can edit the element with id="about-content" in <code>index.html</code>.</p>
+      </div>
+    </div>
+  </aside>
+
   <script src="gallery.js"></script>
 </body>
 </html>

@@ -13,6 +13,45 @@ const ovTitle = document.getElementById('ov-title');
 const ovPrev = document.getElementById('ov-prev');
 const ovNext = document.getElementById('ov-next');
 document.getElementById('ov-close').onclick = () => overlay.style.display = 'none';
+// About panel elements (may be absent in some edits)
+const aboutToggle = document.getElementById('about-toggle');
+const aboutPanel = document.getElementById('about-panel');
+const aboutClose = document.getElementById('about-close');
+const aboutContent = document.getElementById('about-content');
+let lastFocusedBeforeAbout = null;
+
+if (aboutToggle && aboutPanel) {
+  aboutToggle.addEventListener('click', () => {
+    const expanded = aboutToggle.getAttribute('aria-expanded') === 'true';
+    if (expanded) closeAbout(); else openAbout();
+  });
+}
+if (aboutClose) aboutClose.addEventListener('click', closeAbout);
+
+function openAbout(){
+  if (!aboutPanel || !aboutToggle) return;
+  lastFocusedBeforeAbout = document.activeElement;
+  aboutPanel.setAttribute('aria-hidden', 'false');
+  aboutToggle.setAttribute('aria-expanded', 'true');
+  // move focus into the panel
+  const first = aboutPanel.querySelector('button, a, [tabindex], input, textarea') || aboutPanel;
+  (first).focus && (first).focus();
+}
+
+function closeAbout(){
+  if (!aboutPanel || !aboutToggle) return;
+  aboutPanel.setAttribute('aria-hidden', 'true');
+  aboutToggle.setAttribute('aria-expanded', 'false');
+  // restore focus
+  try { if (lastFocusedBeforeAbout && lastFocusedBeforeAbout.focus) lastFocusedBeforeAbout.focus(); } catch(e){}
+}
+
+// close about with Escape
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (aboutPanel && aboutPanel.getAttribute('aria-hidden') === 'false') closeAbout();
+  }
+});
 
 // Loader DOM
 const loader = document.getElementById('loader');
