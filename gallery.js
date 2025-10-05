@@ -42,8 +42,29 @@ function setLoader(pct) {
 }
 function hideLoader() {
   if (!loader) return;
+  stopFakeLoader();
   loader.style.opacity = '0';
   setTimeout(() => { loader.style.display = 'none'; }, 200);
+}
+
+// --- Fake loader (ensures the loader finishes in ~7.5s if real loading stalls) ---
+let fakeLoaderRaf = null;
+let fakeLoaderStart = 0;
+let fakeLoaderDuration = 0;
+function stopFakeLoader(){ if (fakeLoaderRaf) { cancelAnimationFrame(fakeLoaderRaf); fakeLoaderRaf = null; } }
+function startFakeLoader(duration = 7500){
+  stopFakeLoader();
+  fakeLoaderDuration = Math.max(0, duration);
+  fakeLoaderStart = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  const tick = () => {
+    const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+    const elapsed = now - fakeLoaderStart;
+    const pct = Math.min(100, (elapsed / fakeLoaderDuration) * 100);
+    setLoader(pct);
+    if (pct >= 100) { stopFakeLoader(); hideLoader(); }
+    else fakeLoaderRaf = requestAnimationFrame(tick);
+  };
+  fakeLoaderRaf = requestAnimationFrame(tick);
 }
 
 // --- helpers ---
@@ -244,6 +265,7 @@ async function trackFirstPage(imgEls) {
   });
 
   await Promise.all(promises);
+  stopFakeLoader();
   hideLoader();
 }
 
@@ -254,6 +276,9 @@ const pageObserver = new IntersectionObserver((entries)=>{
 (async function boot(){
   // Absolute fallback: never let the loader sit forever.
   const hardFail = setTimeout(() => hideLoader(), 9000);
+
+  // Start a fake loader so the UI always shows progress for ~7.5s
+  startFakeLoader(7500);
 
   await loadNextPage({ nocache: true });
   pageObserver.observe(sentinel);
