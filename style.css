@@ -60,16 +60,9 @@ h1 { margin:0; font-size:1.1rem; letter-spacing:.4px; }
 .ov-arrow svg { width:18px; height:18px; }
 @media (pointer: coarse) { .ov-arrow { display:none; } }
 
-/* circular loader */
+/* static loader */
 #loader {
   position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
   background:rgba(0,0,0,.75); z-index:9999; flex-direction:column; gap:12px;
 }
-#loader .ring { width:96px; height:96px; }
-#loader .ring .bg { fill:none; stroke:rgba(255,255,255,0.12); stroke-width:12; }
-#loader .ring .fg {
-  fill:none; stroke:#fff; stroke-width:12; stroke-linecap:round;
-  transform:rotate(-90deg); transform-origin:50% 50%;
-  stroke-dasharray:326.725; stroke-dashoffset:326.725;
-}
-#loader .label { font-size:0.95rem; color:#eaeaf0; letter-spacing:.3px; }
+#loader .label, #loader-text { font-size:1rem; color:#eaeaf0; letter-spacing:.3px; padding:8px 12px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.06); border-radius:4px; }

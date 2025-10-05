@@ -10,13 +10,9 @@
   <title>rescued.art</title>
 </head>
 <body>
-  <!-- Circular loader (fills as first page thumbnails load) -->
+  <!-- Static loading screen shown while first page loads -->
   <div id="loader" aria-live="polite">
-    <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
-      <circle class="bg" cx="60" cy="60" r="52"></circle>
-      <circle class="fg" cx="60" cy="60" r="52"></circle>
-    </svg>
-    <div class="label"><span id="loader-pct">0</span>%</div>
+    <div class="label" id="loader-text">Loading...</div>
   </div>
 
   <main>

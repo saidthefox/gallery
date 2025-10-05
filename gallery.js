@@ -16,55 +16,22 @@ document.getElementById('ov-close').onclick = () => overlay.style.display = 'non
 
 // Loader DOM
 const loader = document.getElementById('loader');
-const loaderPct = document.getElementById('loader-pct');
-const loaderCircle = document.querySelector('#loader .fg');
+// loader text only; no percentage element
 // circumference for r=52 (matches SVG)
 const CIRC = 2 * Math.PI * 52;
-if (loaderCircle) {
-  loaderCircle.style.strokeDasharray = CIRC;
-  loaderCircle.style.strokeDashoffset = CIRC;
-}
 // Ensure loader is visible at startup (in case CSS or race hid it)
 if (loader) {
   loader.style.display = loader.style.display || 'flex';
   loader.style.opacity = loader.style.opacity || '1';
 }
 
+// Loader is now static (no animated progress). setLoader is a no-op.
 setLoader(0);
-function setLoader(pct) {
-  const clamped = Math.max(0, Math.min(100, pct));
-  try {
-    if (loaderPct) loaderPct.textContent = Math.round(clamped);
-  } catch (e) { /* ignore DOM errors */ }
-  try {
-    if (loaderCircle) loaderCircle.style.strokeDashoffset = CIRC * (1 - clamped / 100);
-  } catch (e) { /* ignore DOM errors */ }
-}
+function setLoader(pct) { /* noop - static loading text only */ }
 function hideLoader() {
   if (!loader) return;
-  stopFakeLoader();
   loader.style.opacity = '0';
   setTimeout(() => { loader.style.display = 'none'; }, 200);
-}
-
-// --- Fake loader (ensures the loader finishes in ~7.5s if real loading stalls) ---
-let fakeLoaderRaf = null;
-let fakeLoaderStart = 0;
-let fakeLoaderDuration = 0;
-function stopFakeLoader(){ if (fakeLoaderRaf) { cancelAnimationFrame(fakeLoaderRaf); fakeLoaderRaf = null; } }
-function startFakeLoader(duration = 7500){
-  stopFakeLoader();
-  fakeLoaderDuration = Math.max(0, duration);
-  fakeLoaderStart = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-  const tick = () => {
-    const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-    const elapsed = now - fakeLoaderStart;
-    const pct = Math.min(100, (elapsed / fakeLoaderDuration) * 100);
-    setLoader(pct);
-    if (pct >= 100) { stopFakeLoader(); hideLoader(); }
-    else fakeLoaderRaf = requestAnimationFrame(tick);
-  };
-  fakeLoaderRaf = requestAnimationFrame(tick);
 }
 
 // --- helpers ---
@@ -265,7 +232,6 @@ async function trackFirstPage(imgEls) {
   });
 
   await Promise.all(promises);
-  stopFakeLoader();
   hideLoader();
 }
 
@@ -276,9 +242,6 @@ const pageObserver = new IntersectionObserver((entries)=>{
 (async function boot(){
   // Absolute fallback: never let the loader sit forever.
   const hardFail = setTimeout(() => hideLoader(), 9000);
-
-  // Start a fake loader so the UI always shows progress for ~7.5s
-  startFakeLoader(7500);
 
   await loadNextPage({ nocache: true });
   pageObserver.observe(sentinel);
