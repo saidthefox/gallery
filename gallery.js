@@ -24,12 +24,21 @@ if (loaderCircle) {
   loaderCircle.style.strokeDasharray = CIRC;
   loaderCircle.style.strokeDashoffset = CIRC;
 }
+// Ensure loader is visible at startup (in case CSS or race hid it)
+if (loader) {
+  loader.style.display = loader.style.display || 'flex';
+  loader.style.opacity = loader.style.opacity || '1';
+}
+
 setLoader(0);
 function setLoader(pct) {
-  if (!loaderPct || !loaderCircle) return;
   const clamped = Math.max(0, Math.min(100, pct));
-  loaderPct.textContent = Math.round(clamped);
-  loaderCircle.style.strokeDashoffset = CIRC * (1 - clamped / 100);
+  try {
+    if (loaderPct) loaderPct.textContent = Math.round(clamped);
+  } catch (e) { /* ignore DOM errors */ }
+  try {
+    if (loaderCircle) loaderCircle.style.strokeDashoffset = CIRC * (1 - clamped / 100);
+  } catch (e) { /* ignore DOM errors */ }
 }
 function hideLoader() {
   if (!loader) return;
@@ -196,41 +205,45 @@ async function trackFirstPage(imgEls) {
   // No images? Dismiss quickly.
   if (!imgEls || !imgEls.length) { setLoader(100); hideLoader(); return; }
 
-  let done = 0, total = imgEls.length;
-  setLoader(1); // nudge off 0% so you see movement
+  const total = imgEls.length;
+  let done = 0;
+  setLoader(1);
 
-  // helper that resolves on decode or load/error, with a per-image timeout
-  const waitFor = (img, timeoutMs = 7000) => {
+  const waitFor = (img, timeoutMs = 7000) => new Promise((resolve) => {
     // already ready (from cache)
-    if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+    if (img.complete && img.naturalWidth > 0) return resolve();
 
-    // prefer decode() when available (Safari 15+, Chrome, etc.)
     let settled = false;
-    const end = () => { if (!settled) settled = true; };
-    const pDecode = (img.decode ? img.decode() : Promise.reject());
+    const finalize = () => { if (settled) return; settled = true; resolve(); };
 
-    const pEvents = new Promise((resolve) => {
-      const onEnd = () => { end(); resolve(); };
-      img.addEventListener('load', onEnd, { once:true });
-      img.addEventListener('error', onEnd, { once:true });
-    });
+    // prefer decode() when available
+    if (img.decode) {
+      img.decode().then(finalize).catch(()=>{/* fall back to events */});
+    }
 
-    const pTimeout = new Promise((resolve) => setTimeout(() => { end(); resolve(); }, timeoutMs));
+    const onEnd = () => finalize();
+    img.addEventListener('load', onEnd, { once: true });
+    img.addEventListener('error', onEnd, { once: true });
 
-    // whichever happens first
-    return Promise.race([pDecode.catch(()=>{}), pEvents, pTimeout]);
-  };
+    // ensure we don't wait forever
+    setTimeout(finalize, timeoutMs);
+  });
 
-  for (const img of imgEls) {
+  // Kick off all waits in parallel; as each settles, increment progress
+  const promises = imgEls.map(img => {
     // ensure the same URL is requested (sometimes dataset vs src differs)
-    if (!img.src) img.src = img.dataset?.src || img.getAttribute('src');
+    if (!img.src) img.src = img.dataset?.src || img.getAttribute('src') || '';
 
-    // Wait per image, update progress incrementally
-    try { await waitFor(img); } catch (_) {}
-    done++;
-    setLoader((done / total) * 100);
-  }
+    return waitFor(img).then(() => {
+      done++;
+      setLoader((done / total) * 100);
+    }).catch(() => {
+      done++;
+      setLoader((done / total) * 100);
+    });
+  });
 
+  await Promise.all(promises);
   hideLoader();
 }
 
