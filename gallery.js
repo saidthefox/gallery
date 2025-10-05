@@ -159,14 +159,36 @@ function changeTileImage(item,tile,delta){
 // --- overlay / lightbox ---
 let currentItem = null;
 let currentIndex = 0;
+// Build the stacked thumbnail column for the overlay
+function buildOverlayThumbs(item){
+  const container = document.getElementById('ov-thumbs');
+  if (!container) return;
+  container.innerHTML = '';
+  const urls = (item && item.imageUrls) ? item.imageUrls : [];
+  urls.forEach((u, i) => {
+    const img = document.createElement('img');
+    img.src = imageUrlAt(item, i, 400);
+    img.alt = `Thumbnail ${i+1}`;
+    img.tabIndex = 0;
+    img.addEventListener('click', () => { currentIndex = i; updateOverlay(); });
+    img.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); currentIndex = i; updateOverlay(); } });
+    container.appendChild(img);
+  });
+}
 function updateOverlay(){
   if (!currentItem) return;
   ovImg.src = imageUrlAt(currentItem, currentIndex, 1600);
   ovTitle.textContent = `Photo ${currentIndex+1} of ${currentItem.imageUrls.length}`;
+  // highlight active thumb
+  try {
+    const thumbs = document.querySelectorAll('#ov-thumbs img');
+    thumbs.forEach((t, i) => t.classList.toggle('active', i === currentIndex));
+  } catch (e) {}
 }
 function openOverlay(item,index=0){
   currentItem = item; currentIndex = index;
   overlay.style.display='flex';
+  buildOverlayThumbs(item);
   updateOverlay();
 }
 ovPrev?.addEventListener('click', ()=>{ if(!currentItem) return; currentIndex=(currentIndex-1+currentItem.imageUrls.length)%currentItem.imageUrls.length; updateOverlay(); });

@@ -29,14 +29,28 @@
       </h2>
 
       <div class="viewer">
-        <!-- desktop glass arrows -->
-        <button class="ov-arrow left" id="ov-prev" aria-label="Previous">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
-        <img id="ov-img" class="bigimg" alt="" />
-        <button class="ov-arrow right" id="ov-next" aria-label="Next">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
-        </button>
+        <!-- Left: stacked thumbnails for the current tile -->
+        <div class="ov-thumbs" id="ov-thumbs" aria-hidden="false"></div>
+
+        <!-- Center: large image -->
+        <div class="ov-main">
+          <button class="ov-arrow left" id="ov-prev" aria-label="Previous">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <img id="ov-img" class="bigimg" alt="" />
+          <button class="ov-arrow right" id="ov-next" aria-label="Next">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+
+        <!-- Right: metadata / description area (populated later) -->
+        <aside class="ov-meta" id="ov-meta" role="region" aria-label="Photo details">
+          <h3 id="ov-meta-title">Details</h3>
+          <div id="ov-meta-content">
+            <!-- Placeholder: this will be populated from Google Sheets in a future step. -->
+            <p class="meta-placeholder">No metadata connected yet. Edit <code>ov-meta-content</code> in <code>index.html</code> or connect your data source.</p>
+          </div>
+        </aside>
       </div>
     </div>
   </div>

@@ -60,6 +60,20 @@ h1 { margin:0; font-size:1.1rem; letter-spacing:.4px; }
 .ov-arrow svg { width:18px; height:18px; }
 @media (pointer: coarse) { .ov-arrow { display:none; } }
 
+/* Overlay three-column layout */
+.viewer { display:flex; gap:12px; align-items:start; }
+.ov-thumbs {
+  width:88px; max-height:72vh; overflow:auto; display:flex; flex-direction:column; gap:8px; padding:6px;
+}
+.ov-thumbs img { width:100%; height:72px; object-fit:cover; display:block; cursor:pointer; border:2px solid transparent; }
+.ov-thumbs img:focus, .ov-thumbs img:hover { border-color:rgba(255,255,255,0.16); }
+.ov-main { flex:1 1 auto; display:flex; align-items:center; justify-content:center; position:relative; }
+.ov-main .ov-arrow { position:absolute; z-index:5; }
+.ov-main .bigimg { width:100%; height:min(78vh,72vw); object-fit:contain; }
+.ov-meta { width:300px; max-width:36vw; padding:8px 12px; background:transparent; color:#ddd; border-left:1px solid rgba(255,255,255,0.04); }
+.ov-meta h3 { margin-top:0; }
+.meta-placeholder { color:#bdbdbd; font-size:0.95rem; }
+
 /* static loader */
 #loader {
   position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
