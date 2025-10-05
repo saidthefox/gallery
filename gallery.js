@@ -18,13 +18,23 @@ document.getElementById('ov-close').onclick = () => overlay.style.display = 'non
 const loader = document.getElementById('loader');
 const loaderPct = document.getElementById('loader-pct');
 const loaderCircle = document.querySelector('#loader .fg');
-const CIRC = 2 * Math.PI * 52; // r=52 as in CSS
+const CIRC = 2 * Math.PI * 52; // r=52 (matches CSS/SVG)
+if (loaderCircle) {
+  loaderCircle.style.strokeDasharray = CIRC;
+  loaderCircle.style.strokeDashoffset = CIRC;
+}
+setLoader(0);
 function setLoader(pct) {
+  if (!loaderPct || !loaderCircle) return;
   const clamped = Math.max(0, Math.min(100, pct));
   loaderPct.textContent = Math.round(clamped);
   loaderCircle.style.strokeDashoffset = CIRC * (1 - clamped / 100);
 }
-setLoader(0);
+function hideLoader(){
+  if (!loader) return;
+  loader.style.opacity = '0';
+  setTimeout(()=> { loader.style.display = 'none'; }, 200);
+}
 
 // --- helpers ---
 function fileIdFromUc(url){ const m=(url||'').match(/[?&]id=([^&]+)/); return m?m[1]:''; }
@@ -48,12 +58,16 @@ function makeTile(item, {eager=false} = {}){
 
   const wrap = document.createElement('div'); wrap.className='imgwrap';
   const img = document.createElement('img');
+
   if (eager) {
+    // Important: do NOT use lazy loading on first page, or Safari/Chrome may defer loads.
+    img.loading = 'eager';
     img.src = imageUrlAt(item, 0, 400);
   } else {
+    img.loading = 'lazy';
     lazyThumb(img, imageUrlAt(item, 0, 400));
   }
-  img.alt = ''; img.loading='lazy'; img.decoding='async';
+  img.alt = ''; img.decoding='async';
 
   const hint = document.createElement('div'); hint.className='hint';
   hint.textContent = `${item.count} photo${item.count>1?'s':''}${isTouch?' — swipe':''}`;
@@ -86,7 +100,6 @@ function makeTile(item, {eager=false} = {}){
   // Click => overlay (no ID)
   t.addEventListener('click',()=>openOverlay(item, +t.dataset.index||0));
 
-  // Bottom meta intentionally omitted/hidden
   return { tile: t, imgEl: img };
 }
 
@@ -115,8 +128,8 @@ function openOverlay(item,index=0){
   updateOverlay();
 }
 
-ovPrev.addEventListener('click', ()=>{ if(!currentItem) return; currentIndex = (currentIndex-1+currentItem.imageUrls.length)%currentItem.imageUrls.length; updateOverlay(); });
-ovNext.addEventListener('click', ()=>{ if(!currentItem) return; currentIndex = (currentIndex+1)%currentItem.imageUrls.length; updateOverlay(); });
+ovPrev?.addEventListener('click', ()=>{ if(!currentItem) return; currentIndex = (currentIndex-1+currentItem.imageUrls.length)%currentItem.imageUrls.length; updateOverlay(); });
+ovNext?.addEventListener('click', ()=>{ if(!currentItem) return; currentIndex = (currentIndex+1)%currentItem.imageUrls.length; updateOverlay(); });
 
 // Mobile swipe inside overlay; keyboard arrows on desktop
 let startX=null;
@@ -139,29 +152,34 @@ document.addEventListener('keydown', (e)=>{
   if (e.key === 'ArrowRight') { currentIndex = (currentIndex+1)%currentItem.imageUrls.length; updateOverlay(); }
 });
 
-// ---- paging + accurate first-page loader ----
+// ---- paging + robust first-page loader ----
 let nextPage = 1, hasMore = true, loading = false;
 let firstPageTracked = false;
 
 async function loadNextPage({nocache=false} = {}) {
   if (loading || !hasMore) return; loading = true;
+
   try {
     const url = `${EXEC}?api=items&page=${nextPage}&pageSize=${PAGE_SIZE}${nocache?'&nocache=1':''}`;
     const res = await fetch(url, { cache:'no-store' });
     const data = await res.json();
 
-    const eager = nextPage === 1;    // eagerly load first page for accurate progress
+    const eager = nextPage === 1; // eagerly load first page so images actually fire 'load'
     const imgsToTrack = [];
 
-    if (Array.isArray(data.items)) {
+    if (Array.isArray(data.items) && data.items.length) {
       data.items.forEach(it => {
         const { tile, imgEl } = makeTile(it, {eager});
         grid.appendChild(tile);
         if (eager) imgsToTrack.push(imgEl);
       });
+    } else if (eager) {
+      // No items on first page — don't leave the loader up
+      hideLoader();
+      firstPageTracked = true;
     }
 
-    if (eager && imgsToTrack.length && !firstPageTracked) {
+    if (eager && !firstPageTracked) {
       firstPageTracked = true;
       await trackFirstPageLoads(imgsToTrack);
     }
@@ -171,16 +189,22 @@ async function loadNextPage({nocache=false} = {}) {
   } catch (err) {
     console.error('Page load failed', err);
     if (!firstPageTracked) hideLoader();
-  } finally { loading = false; }
+  } finally {
+    loading = false;
+  }
 }
 
 function trackFirstPageLoads(imgEls){
   return new Promise((resolve)=>{
-    let done = 0, total = imgEls.length;
+    const total = imgEls.length;
+
+    // If there are no images to wait for, bail out immediately.
+    if (!total) { hideLoader(); resolve(); return; }
+
+    let done = 0;
     const bump = () => {
       done++;
-      const pct = (done / total) * 100;
-      setLoader(pct);
+      setLoader((done / total) * 100);
       if (done >= total) { hideLoader(); resolve(); }
     };
 
@@ -189,17 +213,13 @@ function trackFirstPageLoads(imgEls){
         bump();
       } else {
         img.addEventListener('load', bump, { once:true });
-        img.addEventListener('error', bump, { once:true });
+        img.addEventListener('error', bump, { once:true }); // count errors too
       }
     });
 
-    // nudge from 0% so it feels alive
-    setLoader(Math.min(10, (done/total)*100));
+    // Nudge from 0% so it feels alive
+    setLoader(Math.min(10, (done/total)*100 || 5));
   });
-}
-function hideLoader(){
-  loader.style.opacity = '0';
-  setTimeout(()=> loader.style.display = 'none', 200);
 }
 
 const pageObserver = new IntersectionObserver((entries)=>{
@@ -207,6 +227,12 @@ const pageObserver = new IntersectionObserver((entries)=>{
 }, { rootMargin:'800px' });
 
 (async function boot(){
-  await loadNextPage({ nocache: true }); // accurate first page loader
+  // Safety: if something goes terribly wrong, auto-hide loader after 8s
+  const safety = setTimeout(()=>{ if (!document.hidden) hideLoader(); }, 8000);
+
+  await loadNextPage({ nocache: true });
   pageObserver.observe(sentinel);
+
+  // If we reached here and first page completed, remove safety.
+  setTimeout(()=> clearTimeout(safety), 9000);
 })();
