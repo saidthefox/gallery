@@ -1,6 +1,9 @@
 // --- CONFIG: your Apps Script Web App URL (no trailing slash)
+const METADATA_ENDPOINT2 = 'https://script.google.com/macros/s/AKfycbzXYKl5Wi1iOplK9d4mZNHtg-H70H9lb07JkitkPrl0Zb7pVoh8sPYWTxzicUtlE-a4/exec';
 const EXEC = 'https://script.google.com/macros/s/AKfycbyh2wrTXGhKAkoCEqt_ZN2HzoSX6w360OMcLw9hBP5Mn35uX7-hS1WBTahXyLZpvJEE/exec';
 const PAGE_SIZE = 24;
+
+
 
 const isTouch = window.matchMedia('(pointer: coarse)').matches;
 
@@ -19,6 +22,10 @@ const aboutPanel = document.getElementById('about-panel');
 const aboutClose = document.getElementById('about-close');
 const aboutContent = document.getElementById('about-content');
 let lastFocusedBeforeAbout = null;
+
+// Metadata endpoint (by default reuse EXEC). If you deploy a separate Apps Script web app for metadata,
+// set METADATA_ENDPOINT to its URL.
+const METADATA_ENDPOINT = EXEC; // change if needed
 
 if (aboutToggle && aboutPanel) {
   aboutToggle.addEventListener('click', () => {
@@ -93,6 +100,58 @@ const lazyObserver = new IntersectionObserver((entries)=>{
   }
 }, { rootMargin: '300px' });
 function lazyThumb(img, src){ img.dataset.src = src; lazyObserver.observe(img); }
+
+// --- Metadata helpers ---
+// Choose an identifier from the item for metadata lookup. Prefer token/variant or fallback to first fileId.
+function pickKeyForItem(item){
+  if (!item) return '';
+  if (item.token) return item.token;
+  if (item.variant) return item.variant;
+  // try first image fileId
+  const fid = fileIdFromUc(item.imageUrls && item.imageUrls[0]);
+  if (fid) return fid;
+  return '';
+}
+
+async function getMetadata(key){
+  if (!key) return null;
+  try {
+    const url = `${METADATA_ENDPOINT2}?api=meta&key=${encodeURIComponent(key)}`;
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const data = await res.json();
+    // Expect either a single object or an object keyed by id
+    if (data && typeof data === 'object') return data;
+    return null;
+  } catch (err) {
+    console.warn('metadata fetch failed', err);
+    return null;
+  }
+}
+
+async function populateOverlayMeta(item){
+  const metaTitle = document.getElementById('ov-meta-title');
+  const metaContent = document.getElementById('ov-meta-content');
+  if (!metaContent) return;
+  metaTitle.textContent = 'Details';
+  metaContent.innerHTML = '<p class="meta-placeholder">Loading details…</p>';
+
+  const key = pickKeyForItem(item);
+  if (!key) { metaContent.innerHTML = '<p class="meta-placeholder">No identifier available for metadata lookup.</p>'; return; }
+
+  const meta = await getMetadata(key);
+  if (!meta) { metaContent.innerHTML = '<p class="meta-placeholder">No metadata found.</p>'; return; }
+
+  // If the endpoint returned an object keyed by id, try to extract the first object's description
+  let record = meta;
+  if (meta[key]) record = meta[key];
+
+  const desc = record.description || record.Description || record.desc || '';
+  if (!desc) { metaContent.innerHTML = '<p class="meta-placeholder">No description available.</p>'; return; }
+  metaContent.innerHTML = `<div class="desc">${escapeHtml(desc)}</div>`;
+}
+
+function escapeHtml(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // --- tile factory ---
 function makeTile(item, {eager=false} = {}) {
@@ -190,6 +249,8 @@ function openOverlay(item,index=0){
   overlay.style.display='flex';
   buildOverlayThumbs(item);
   updateOverlay();
+  // populate metadata (description) asynchronously
+  populateOverlayMeta(item);
 }
 ovPrev?.addEventListener('click', ()=>{ if(!currentItem) return; currentIndex=(currentIndex-1+currentItem.imageUrls.length)%currentItem.imageUrls.length; updateOverlay(); });
 ovNext?.addEventListener('click', ()=>{ if(!currentItem) return; currentIndex=(currentIndex+1)%currentItem.imageUrls.length; updateOverlay(); });
