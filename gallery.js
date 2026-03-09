@@ -86,9 +86,9 @@ function hideLoader() {
 }
 
 // --- helpers ---
-function fileIdFromUc(url){ const m=(url||'').match(/[?&]id=([^&]+)/); return m?m[1]:''; }
-function lh3Url(id,w=1600){ return id ? `https://lh3.googleusercontent.com/d/${id}=w${w}` : ''; }
-function imageUrlAt(item,i,w=1600){ return lh3Url(fileIdFromUc(item.imageUrls[i] || ''), w); }
+function imageUrlAt(item, i, w=1600) {
+  return (item.imageUrls && item.imageUrls[i]) ? item.imageUrls[i] : '';
+}
 
 // Lazy loader (used for pages after the first)
 const lazyObserver = new IntersectionObserver((entries)=>{
