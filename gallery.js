@@ -1,6 +1,6 @@
 // --- CONFIG: your Apps Script Web App URL (no trailing slash)
 const METADATA_ENDPOINT2 = 'https://script.google.com/macros/s/AKfycbzXYKl5Wi1iOplK9d4mZNHtg-H70H9lb07JkitkPrl0Zb7pVoh8sPYWTxzicUtlE-a4/exec';
-const EXEC = 'https://script.google.com/macros/s/AKfycbyh2wrTXGhKAkoCEqt_ZN2HzoSX6w360OMcLw9hBP5Mn35uX7-hS1WBTahXyLZpvJEE/exec';
+const EXEC = 'https://rescued-art-sync.rescuedart.workers.dev';
 const PAGE_SIZE = 24;
 
 
@@ -283,7 +283,7 @@ async function loadNextPage({nocache=false} = {}) {
   if (loading || !hasMore) return; loading = true;
 
   try {
-    const url = `${EXEC}?api=items&page=${nextPage}&pageSize=${PAGE_SIZE}${nocache?'&nocache=1':''}`;
+    const url = `${EXEC}/api/items?page=${nextPage}&pageSize=${PAGE_SIZE}${nocache?'&nocache=1':''}`;
     const res = await fetch(url, { cache:'no-store' });
     const data = await res.json();
 
