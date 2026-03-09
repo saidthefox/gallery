@@ -324,7 +324,7 @@ async function trackFirstPage(imgEls) {
   let done = 0;
   setLoader(1);
 
-  const waitFor = (img, timeoutMs = 7000) => new Promise((resolve) => {
+  const waitFor = (img, timeoutMs = 500) => new Promise((resolve) => {
     // already ready (from cache)
     if (img.complete && img.naturalWidth > 0) return resolve();
 
@@ -368,7 +368,7 @@ const pageObserver = new IntersectionObserver((entries)=>{
 
 (async function boot(){
   // Absolute fallback: never let the loader sit forever.
-  const hardFail = setTimeout(() => hideLoader(), 9000);
+  const hardFail = setTimeout(() => hideLoader(), 500);
 
   await loadNextPage({ nocache: true });
   pageObserver.observe(sentinel);
