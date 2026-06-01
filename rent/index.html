@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#14110d">
+  <title>Rent a Piece — rescued.art</title>
+  <meta name="description" content="Rotating, curated thrift-rescued art for cafés, studios, and offices around San Antonio. Unique finds, swapped on a schedule.">
+  <link rel="icon" href="/icon-192.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;1,9..144,400&family=Hanken+Grotesk:wght@400;500&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/core.css">
+</head>
+<body>
+  <header>
+    <div class="masthead">
+      <a class="brand" href="/">
+        <span class="brand__mark">RESCUED.ART</span>
+        <span class="brand__sub">San Antonio · est. found</span>
+      </a>
+      <nav class="nav">
+        <a href="/gallery/">Archive</a>
+        <a href="/rent/" aria-current="page">Rent</a>
+        <a href="/visit/">Visit</a>
+      </nav>
+    </div>
+    <hr class="rule rule--double">
+  </header>
+
+  <main>
+    <div class="page-head">
+      <p class="kicker">Art lease &amp; rotation</p>
+      <h1>Rent a Piece</h1>
+      <p>Give your space a wall that feels curated — and changes. I place rescued, one-of-a-kind
+         works in cafés, studios, salons, and offices around San Antonio, then rotate them on a
+         schedule so the room never goes stale. Every piece carries its own story. You never think
+         about it. To start a placement or ask about a specific work, email
+         <a href="mailto:jake@rescued.art">jake@rescued.art</a>.</p>
+    </div>
+
+    <section class="info-grid" aria-label="How it works">
+      <div class="info"><h3>Curated for you</h3><p>I pick a set that suits the room, the light, and the vibe — not whatever’s left over.</p></div>
+      <div class="info"><h3>Rotated on a schedule</h3><p>Swaps every 1, 3, or 6 months. I hang and collect; you do nothing.</p></div>
+      <div class="info"><h3>Every piece has a story</h3><p>All rescued, all local. A small card invites your guests to ask about the work.</p></div>
+    </section>
+
+    <div class="page-head" style="padding-top:clamp(1.5rem,3vw,2.5rem)">
+      <p class="kicker">Currently available to lease</p>
+    </div>
+    <div id="rent-mount"></div>
+  </main>
+
+  <footer>
+    <span>© rescued.art — Southtown, San Antonio</span>
+    <a href="mailto:jake@rescued.art">jake@rescued.art</a>
+  </footer>
+
+  <script type="module">
+    import { mountGallery } from '/assets/gallery.js';
+    mountGallery(document.getElementById('rent-mount'), { filter: 'rent' });
+  </script>
+</body>
+</html>

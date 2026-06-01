@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#14110d">
+  <title>The Archive — rescued.art</title>
+  <meta name="description" content="The full catalogue of original artworks rescued from thrift stores around San Antonio.">
+  <link rel="icon" href="/icon-192.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;1,9..144,400&family=Hanken+Grotesk:wght@400;500&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/core.css">
+</head>
+<body>
+  <header>
+    <div class="masthead">
+      <a class="brand" href="/">
+        <span class="brand__mark">RESCUED.ART</span>
+        <span class="brand__sub">San Antonio · est. found</span>
+      </a>
+      <nav class="nav">
+        <a href="/gallery/" aria-current="page">Archive</a>
+        <a href="/rent/">Rent</a>
+        <a href="/visit/">Visit</a>
+      </nav>
+    </div>
+    <hr class="rule rule--double">
+  </header>
+
+  <main>
+    <div class="page-head">
+      <p class="kicker">Complete catalogue</p>
+      <h1>The Archive</h1>
+      <p>Everything that has come through the doors. Tap any piece to see additional views and
+         catalogue notes. New rescues are added regularly — for sale, for rent, or simply on record.</p>
+    </div>
+    <div id="gallery-mount"></div>
+  </main>
+
+  <footer>
+    <span>© rescued.art — Southtown, San Antonio</span>
+    <a href="mailto:jake@rescued.art">jake@rescued.art</a>
+  </footer>
+
+  <script type="module">
+    import { mountGallery } from '/assets/gallery.js';
+    mountGallery(document.getElementById('gallery-mount'));
+  </script>
+</body>
+</html>
