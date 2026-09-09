@@ -298,6 +298,8 @@ function emptyState(mount, html) {
 // ===========================================================================
 export function mountGallery(mount, { filter = null } = {}) {
   if (!mount) return;
+  const requestedToken = new URLSearchParams(window.location.search).get('piece');
+  let openedRequested = false;
   const grid = document.createElement('div');
   grid.className = 'grid';
   const sentinel = document.createElement('div');
@@ -320,6 +322,11 @@ export function mountGallery(mount, { filter = null } = {}) {
         if (status) sawStatus = true;
         if (filter === 'rent' && !isRentable(status)) continue;
         grid.appendChild(makeTile(it, shown++));
+        const token = String(pick(it, 'token', 'variant') || '');
+        if (requestedToken && !openedRequested && token === requestedToken) {
+          openedRequested = true;
+          ensureLightbox().open(it, 0);
+        }
       }
       more = !!data.hasMore; page += 1;
       if (!more) io.unobserve(sentinel);
@@ -331,6 +338,13 @@ export function mountGallery(mount, { filter = null } = {}) {
     } finally {
       busy = false;
       mount.classList.remove('is-loading');
+      // A shared social link may target a piece beyond the first page. Keep
+      // paging until it is found (or the feed is exhausted), independent of
+      // the scroll sentinel.
+      if (requestedToken && !openedRequested && more) {
+        loadPage();
+        return;
+      }
       // keep pulling until the viewport is full (handles tall screens / heavy filtering)
       if (more && grid.getBoundingClientRect().bottom < window.innerHeight + 200) loadPage();
       else if (filter === 'rent' && !shown && !more) showRentEmpty();
