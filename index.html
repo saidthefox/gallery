@@ -5,24 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#14110d">
   <title>rescued.art — previously looked at art</title>
-  <meta name="description" content="A growing archive of original artworks rescued from thrift stores around San Antonio. For sale, for rent, and for visiting on First Fridays.">
+  <meta name="description" content="A growing gallery of original artworks rescued from thrift stores around San Antonio. Browse the collection, or see it in person on First Fridays in Southtown.">
   <link rel="icon" href="/icon-192.png">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;1,9..144,400&family=Hanken+Grotesk:wght@400;500&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/assets/core.css">
+  <link rel="stylesheet" href="/assets/core.css?v=20261002">
 </head>
 <body>
   <header>
     <div class="masthead">
       <a class="brand" href="/">
-        <span class="brand__mark">RESCUED.ART</span>
+        <span class="brand__mark">RESCUED.<span class="brand__mark-art">ART</span></span>
         <span class="brand__sub">San Antonio · est. 2025</span>
       </a>
       <nav class="nav">
-        <a href="/gallery/">Archive</a>
-        <a href="/rent/">Rent</a>
+        <a href="/gallery/">Gallery</a>
         <a href="/visit/">Visit</a>
       </nav>
     </div>
@@ -32,41 +31,32 @@
   <main>
     <section class="hero">
       <div>
-        <p class="kicker">The Rescue Archive</p>
-        <h1>Art that was<br>nearly <em>thrown away.</em></h1>
+        <p class="kicker">The Rescue Gallery</p>
+        <h1>Art,<br><em>found</em></h1>
       </div>
       <p class="hero__statement">
-        Every piece here was found in a thrift store somewhere around San Antonio and
-        carried home because I liked it. <strong>This is the catalogue of that
-        collection</strong> — a record of the works, and an open invitation to take one home,
-        borrow one for your wall, or come sit with them on a First Friday.
+        I hunt for, collect, and admire exquisite treasures in the thrift stores of San Antonio, TX. <strong>This site features those I have managed to rescue</strong>—a record, a gallery, and an open invitation to enjoy them: here, or in person on a First Friday or by appointment.
       </p>
     </section>
 
     <nav class="doors" aria-label="Sections">
       <a class="door" href="/gallery/">
         <span class="door__no">01 / Collection</span>
-        <h2>The Archive</h2>
-        <p>The full catalogue of rescued works — browse everything that has come through the doors.</p>
-        <span class="door__go">Enter the archive</span>
-      </a>
-      <a class="door" href="/rent/">
-        <span class="door__no">02 / Lease</span>
-        <h2>Rent a Piece</h2>
-        <p>Rotating, curated art for cafés, studios, and offices. Unique finds, swapped on a schedule, all handled.</p>
-        <span class="door__go">See what’s available</span>
+        <h2>The Gallery</h2>
+        <p>The full catalogue of rescued works—browse everything that has come through the doors.</p>
+        <span class="door__go">Enter the gallery</span>
       </a>
       <a class="door" href="/visit/">
-        <span class="door__no">03 / In Person</span>
+        <span class="door__no">02 / In Person</span>
         <h2>Visit &amp; Events</h2>
-        <p>Open every First Friday at Blue Star, by appointment otherwise, and available for event curation.</p>
+        <p>Open First Fridays, ~7–11pm, behind Contemporary / Bar 1919 in Southtown; by appointment otherwise. <strong data-next-ff></strong></p>
         <span class="door__go">Plan a visit</span>
       </a>
     </nav>
 
     <section class="recent" data-recent>
       <div class="recent__head">
-        <h2>Recent acquisitions</h2>
+        <h2>Recent rescues</h2>
         <a class="door__go" href="/gallery/" style="margin:0">All works</a>
       </div>
       <div id="recent-mount"><p class="kicker">Loading the latest finds…</p></div>
@@ -79,6 +69,7 @@
   </footer>
 
   <script type="module">
+    import '/assets/config.js';
     import { mountRecent } from '/assets/gallery.js';
     mountRecent(document.getElementById('recent-mount'), { count: 8 });
   </script>

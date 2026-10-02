@@ -3,18 +3,18 @@
 // Edit endpoints here ONLY. Every page imports from this file.
 // =============================================================================
 export const CONFIG = {
-  IMG_HOST: 'https://img.rescued.art',  // your R2 custom domain; leave '' to disable resizing
-  // Your Cloudflare Worker (serves the paginated image feed at /api/items)
-  WORKER: 'https://rescued-art-sync.rescuedart.workers.dev',
+  IMG_HOST: 'https://img.rescued.art',  // R2 custom domain (Cloudflare image resizing); leave '' to disable
+  // rescued.art backend (FastAPI on the homelab). Serves the paginated feed at /api/items.
+  WORKER: 'https://api.rescued.art',
 
-  // Your Apps Script web app (serves per-piece metadata at ?api=meta&key=TOKEN)
-  META: 'https://script.google.com/macros/s/AKfycbzXYKl5Wi1iOplK9d4mZNHtg-H70H9lb07JkitkPrl0Zb7pVoh8sPYWTxzicUtlE-a4/exec',
+  // Per-piece metadata endpoint on the same backend (?api=meta&key=TOKEN).
+  META: 'https://api.rescued.art/api/meta',
 
   PAGE_SIZE: 24,
 
   // Contact + venue (used on landing / visit / rent pages)
   EMAIL: 'jake@rescued.art',
-  VENUE: 'Blue Star Arts Complex — 117 Blue Star, behind Contemporary',
+  VENUE: 'Behind Contemporary / Bar 1919, Southtown — address on request',
   HOURS: 'Every First Friday, ~7–11pm · otherwise by appointment',
 
   // When your feed (or metadata) starts returning a `status` field per piece,
@@ -22,6 +22,24 @@ export const CONFIG = {
   // rentable are listed here (matched case-insensitively, substring OK).
   RENTABLE_STATUSES: ['for rent', 'for_rent', 'rent', 'available', 'for sale or rent'],
 };
+
+// --- Next First Friday: fills any element marked data-next-ff -----------------
+// "Open tonight" on the day itself; otherwise the date of the next one (local time).
+export function nextFirstFriday(now = new Date()) {
+  const firstFriday = (y, m) => { const d = new Date(y, m, 1); d.setDate(1 + ((5 - d.getDay() + 7) % 7)); return d; };
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let ff = firstFriday(now.getFullYear(), now.getMonth());
+  if (ff < today) ff = firstFriday(now.getFullYear(), now.getMonth() + 1);
+  return { date: ff, tonight: ff.getTime() === today.getTime() };
+}
+function fillNextFirstFriday() {
+  const { date, tonight } = nextFirstFriday();
+  const text = tonight ? 'Open tonight, ~7–11pm.'
+    : 'Next First Friday: ' + date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + '.';
+  document.querySelectorAll('[data-next-ff]').forEach(el => { el.textContent = text; });
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fillNextFirstFriday);
+else fillNextFirstFriday();
 
 // --- Service worker (installability + offline shell). Safe to keep; it never
 // caches the live feed, so your art is always fresh. -------------------------
