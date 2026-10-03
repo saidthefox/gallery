@@ -15,7 +15,11 @@ export const CONFIG = {
   // Contact + venue (used on landing / visit / rent pages)
   EMAIL: 'jake@rescued.art',
   VENUE: 'Behind Contemporary / Bar 1919, Southtown — address on request',
-  HOURS: 'Every First Friday, ~7–11pm · otherwise by appointment',
+  // First Fridays are paused (2026-10-02, Jake): visits are by appointment until he decides. To bring them
+  // back, set FIRST_FRIDAYS_OPEN: true, restore HOURS, and restore the First Friday lines in index.html and
+  // visit/index.html (see git history).
+  FIRST_FRIDAYS_OPEN: false,
+  HOURS: 'By appointment',
 
   // When your feed (or metadata) starts returning a `status` field per piece,
   // /rent will automatically show only the rentable ones. Values treated as
@@ -33,6 +37,10 @@ export function nextFirstFriday(now = new Date()) {
   return { date: ff, tonight: ff.getTime() === today.getTime() };
 }
 function fillNextFirstFriday() {
+  if (!CONFIG.FIRST_FRIDAYS_OPEN) {  // paused: the static text says "by appointment"
+    document.querySelectorAll('[data-next-ff]').forEach(el => { el.textContent = ''; });
+    return;
+  }
   const { date, tonight } = nextFirstFriday();
   const text = tonight ? 'Open tonight, ~7–11pm.'
     : 'Next First Friday: ' + date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + '.';

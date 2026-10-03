@@ -1,7 +1,7 @@
 // rescued.art service worker — installable + offline shell.
 // IMPORTANT: the live feed (Worker + Apps Script) is always fetched from the
 // network, so the gallery never shows stale art. Bump CACHE on any asset change.
-const CACHE = 'rescued-art-v2';
+const CACHE = 'rescued-art-v3';
 const SHELL = [
   '/', '/gallery/', '/visit/',
   '/assets/core.css', '/assets/gallery.js', '/assets/config.js',
