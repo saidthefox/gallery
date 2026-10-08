@@ -57,6 +57,7 @@
 .more { display: block; margin: 1.4rem auto 0; background: #fff; color: var(--c-navy); border: 2px solid var(--c-navy);
   border-radius: var(--wobble); padding: 0.6rem 1.6rem; font-family: var(--display); font-size: 1.15rem; cursor: pointer; }
 .more:hover { background: var(--c-navy); color: #fff; }
+.more[hidden] { display: none; }   /* .more sets display, which would beat the hidden attribute */
 
 /* the side card: price, favourites, details, send */
 .rent__side { display: flex; flex-direction: column; gap: 1.2rem; }
