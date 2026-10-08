@@ -82,8 +82,8 @@ function update() {
   document.getElementById('price').textContent = dollars == null ? '—' : `$${dollars} / month`;
   const off = state.count ? (opts.multiDiscount[String(state.count)] || 0) : 0;
   document.getElementById('priceNote').textContent = dollars == null
-    ? 'Choose how many, a size and how often.'
-    : `${state.count} piece${state.count > 1 ? 's' : ''}, swapped ${state.frequency === 'twice' ? 'twice a month' : 'once a month'}`
+    ? (opts.maxPieces > 1 ? 'Choose how many, a size and how often.' : 'Choose a size and how often.')
+    : `${opts.maxPieces > 1 ? `${state.count} piece${state.count > 1 ? 's' : ''}, ` : 'One piece, '}swapped ${state.frequency === 'twice' ? 'twice a month' : 'once a month'}`
       + (off ? ` · ${Math.round(off * 100)}% off for ${state.count}` : '') + ' · delivery and swaps included';
   renderPicks();
 }
@@ -161,7 +161,14 @@ form.addEventListener('submit', async (e) => {
     document.getElementById('pickHint').textContent = 'Renting is not available right now. Please email jake@rescued.art.';
     return;
   }
-  choiceButtons('count', [1, 2, 3].slice(0, opts.maxPieces).map((n) => ({ value: String(n), label: String(n), sub: n === 1 ? 'piece' : 'pieces' })));
+  if (opts.maxPieces > 1) {
+    choiceButtons('count', [1, 2, 3].slice(0, opts.maxPieces).map((n) => ({ value: String(n), label: String(n), sub: n === 1 ? 'piece' : 'pieces' })));
+  } else {
+    // One piece per rental for now: no how-many step; renumber the steps that remain.
+    state.count = 1;
+    form.querySelector('[data-choice="count"]').closest('.step').hidden = true;
+    [...form.querySelectorAll('.step:not([hidden]) .step__no')].forEach((el, i) => { el.textContent = String(i + 1).padStart(2, '0'); });
+  }
   choiceButtons('size', opts.sizes.map((s) => ({ value: s.key, label: s.label, sub: s.range, disabled: !s.available })));
   choiceButtons('frequency', opts.frequencies.map((x) => ({ value: x.key, label: x.label })));
   chips('types', opts.types);
