@@ -1,5 +1,6 @@
 // rescued.art/rent (2026-10-08): choose how many, a size, what you like and how often; see the price; pick
 // favourites; send a request. The API re-checks everything and computes the real quote; nothing is charged.
+// Favourites show PAGE at a time; the side card (bottom bar on phones) mirrors the price and what is chosen.
 import { CONFIG } from '/assets/config.js';
 
 const API = CONFIG.WORKER;
@@ -9,6 +10,8 @@ const started = Date.now();
 const state = { count: null, size: null, frequency: null, types: new Set(), subjects: new Set(), picks: new Set() };
 let opts = null;
 let pool = [];   // pieces in the chosen size
+const PAGE = 24;
+let limit = PAGE;
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const thumb = (url) => {
@@ -43,22 +46,24 @@ async function select(key, value) {
   paint(key);
   if (key === 'size') {
     state.picks.clear();
+    limit = PAGE;
     const r = await fetch(`${API}/api/rent/pieces?size=${encodeURIComponent(value)}`);
     pool = r.ok ? (await r.json()).pieces : [];
   }
-  update();
+  update(key === 'size');
 }
 
 function chips(key, names) {
   const box = $(`[data-chips="${key}"]`);
-  box.innerHTML = '';
+  box.querySelectorAll('.chip').forEach((c) => c.remove());   // keeps the row's label
   for (const n of names) {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'chip'; b.textContent = n; b.setAttribute('aria-pressed', 'false');
     b.onclick = () => {
       state[key].has(n) ? state[key].delete(n) : state[key].add(n);
       b.setAttribute('aria-pressed', String(state[key].has(n)));
-      update();
+      limit = PAGE;
+      update(true);
     };
     box.appendChild(b);
   }
@@ -77,46 +82,94 @@ function matches(p) {
   return t && s;
 }
 
-function update() {
+function update(repick = false) {
   const dollars = priceDollars();
   document.getElementById('price').textContent = dollars == null ? '—' : `$${dollars} / month`;
+  document.getElementById('barPrice').textContent = dollars == null ? '—' : `$${dollars}/mo`;
   const off = state.count ? (opts.multiDiscount[String(state.count)] || 0) : 0;
   document.getElementById('priceNote').textContent = dollars == null
     ? (opts.maxPieces > 1 ? 'Choose how many, a size and how often.' : 'Choose a size and how often.')
     : `${opts.maxPieces > 1 ? `${state.count} piece${state.count > 1 ? 's' : ''}, ` : 'One piece, '}swapped ${state.frequency === 'twice' ? 'twice a month' : 'once a month'}`
       + (off ? ` · ${Math.round(off * 100)}% off for ${state.count}` : '') + ' · delivery and swaps included';
-  renderPicks();
+  if (repick) renderPicks(); else refreshPicks();
 }
 
 function need() { return state.count ? opts.minPicks[String(state.count)] : 3; }
 
-function renderPicks() {
-  const box = document.getElementById('picks');
-  const hint = document.getElementById('pickHint');
-  box.innerHTML = '';
-  if (!state.size) { hint.textContent = 'Choose a size first.'; return checkReady(); }
+function visible() {
   let shown = pool.filter(matches);
   const narrowed = shown.length < pool.length;
   if (shown.length < need()) shown = pool;   // too few matches: show the whole size rather than a dead end
-  const n = state.picks.size;
-  hint.textContent = !pool.length ? 'Nothing in this size right now — try another size.'
-    : `Pick at least ${need()} you’d be happy to live with (up to ${opts.maxPicks}). ${n} chosen.`
-      + (narrowed && shown === pool ? ' Not enough matches for what you like, so here is everything in this size.' : '');
-  for (const p of shown) {
-    const on = state.picks.has(p.token);
+  return { shown, fallback: narrowed && shown === pool };
+}
+
+function renderPicks() {
+  const box = document.getElementById('picks');
+  const more = document.getElementById('more');
+  box.innerHTML = '';
+  more.hidden = true;
+  if (!state.size) return refreshPicks();
+  const { shown } = visible();
+  for (const p of shown.slice(0, limit)) {
     const b = document.createElement('button');
-    b.type = 'button'; b.className = 'pick'; b.setAttribute('aria-pressed', String(on));
+    b.type = 'button'; b.className = 'pick'; b.dataset.token = p.token;
     b.innerHTML = `<img src="${esc(thumb(p.image))}" alt="${esc(p.title)}" loading="lazy">
       <span class="pick__title">${esc(p.title || 'Untitled')}</span>
       <span class="pick__meta">${esc(p.medium)}</span>`;
-    b.onclick = () => {
-      if (state.picks.has(p.token)) state.picks.delete(p.token);
-      else if (state.picks.size < opts.maxPicks) state.picks.add(p.token);
-      renderPicks();
-    };
+    b.onclick = () => toggle(p.token);
     box.appendChild(b);
   }
+  const left = shown.length - limit;
+  if (left > 0) {
+    more.hidden = false;
+    more.textContent = `Show ${Math.min(left, PAGE)} more (${left} left)`;
+  }
+  refreshPicks();
+}
+
+function toggle(token) {
+  if (state.picks.has(token)) state.picks.delete(token);
+  else if (state.picks.size < opts.maxPicks) state.picks.add(token);
+  refreshPicks();
+}
+
+// Pressed/disabled state, hint, side-card list and bar, without rebuilding the grid.
+function refreshPicks() {
+  const hint = document.getElementById('pickHint');
+  const n = state.picks.size;
+  const full = n >= opts.maxPicks;
+  document.querySelectorAll('#picks .pick').forEach((b) => {
+    const on = state.picks.has(b.dataset.token);
+    b.setAttribute('aria-pressed', String(on));
+    b.disabled = full && !on;
+  });
+  if (!state.size) hint.textContent = 'Choose a size first.';
+  else if (!pool.length) hint.textContent = 'Nothing in this size right now — try another size.';
+  else hint.textContent = `Pick at least ${need()} you’d be happy to live with (up to ${opts.maxPicks}). ${n} chosen.`
+    + (full ? ' That’s the most — tap one to swap it out.' : '')
+    + (visible().fallback ? ' Not enough matches for what you like, so here is everything in this size.' : '');
+  renderChosen();
   checkReady();
+}
+
+function renderChosen() {
+  const n = state.picks.size;
+  const box = document.getElementById('chosen');
+  document.getElementById('chosenN').textContent = state.size ? `${n} of at least ${need()}` : String(n);
+  box.innerHTML = '';
+  for (const token of state.picks) {
+    const p = pool.find((x) => x.token === token);
+    if (!p) continue;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chosen__item'; b.title = `Remove ${p.title || 'Untitled'}`;
+    b.setAttribute('aria-label', `Remove ${p.title || 'Untitled'}`);
+    b.innerHTML = `<img src="${esc(thumb(p.image))}" alt="">`;
+    b.onclick = () => toggle(token);
+    box.appendChild(b);
+  }
+  const bar = document.getElementById('bar');
+  bar.hidden = !state.size && priceDollars() == null;
+  document.getElementById('barCount').textContent = `${n} favourite${n === 1 ? '' : 's'}${state.size && n < need() ? ` · ${need() - n} more` : ''}`;
 }
 
 function checkReady() {
@@ -173,5 +226,6 @@ form.addEventListener('submit', async (e) => {
   choiceButtons('frequency', opts.frequencies.map((x) => ({ value: x.key, label: x.label })));
   chips('types', opts.types);
   chips('subjects', opts.subjects);
-  update();
+  document.getElementById('more').onclick = () => { limit += PAGE; renderPicks(); };
+  update(true);
 })();
