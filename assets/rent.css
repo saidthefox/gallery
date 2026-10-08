@@ -1,0 +1,60 @@
+/* rescued.art/rent (2026-10-08). Uses core.css's tokens; the rent stamp colour is --stamp-2. */
+.rent { max-width: var(--maxw); margin: 0 auto; padding: 0 clamp(1rem, 4vw, 3rem) 4rem; }
+.step { border-top: 1px solid var(--line); padding: 2rem 0 1.6rem; }
+.step h2 { font-size: clamp(1.4rem, 2.6vw, 2rem); display: flex; align-items: baseline; gap: 0.8rem; flex-wrap: wrap; }
+.step__no { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.2em; color: var(--ink-faint); }
+.opt { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); }
+.hint { color: var(--ink-dim); font-size: 0.92rem; margin: 0.5rem 0 1rem; max-width: 60ch; }
+
+.choices { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 1rem; }
+.choice { background: none; color: var(--ink); border: 1px solid var(--line); border-radius: var(--r);
+  padding: 0.8rem 1.3rem; cursor: pointer; font: inherit; display: flex; flex-direction: column; align-items: flex-start;
+  gap: 0.15rem; min-width: 5.5rem; transition: border-color .15s, background .15s; }
+.choice:hover:not(:disabled) { border-color: var(--ink-dim); }
+.choice[aria-pressed="true"] { border-color: var(--stamp-2); background: rgba(79,124,90,0.16); }
+.choice:disabled { opacity: 0.4; cursor: not-allowed; }
+.choice__main { font-family: var(--display); font-size: 1.35rem; }
+.choice__sub { font-family: var(--mono); font-size: 0.7rem; color: var(--ink-dim); letter-spacing: 0.06em; }
+.choices--cards .choice { min-width: 11rem; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.6rem 0; }
+.chip { background: none; color: var(--ink-dim); border: 1px solid var(--line); border-radius: 999px;
+  padding: 0.35rem 0.9rem; font-family: var(--mono); font-size: 0.78rem; cursor: pointer; }
+.chip[aria-pressed="true"] { color: var(--ink); border-color: var(--stamp-2); background: rgba(79,124,90,0.16); }
+
+.price { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem 1.2rem;
+  padding: 1rem 0; background: var(--bg); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.price__label { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-faint); }
+.price__amount { font-family: var(--display); font-size: clamp(1.6rem, 3vw, 2.4rem); color: var(--ink); }
+.price__note { color: var(--ink-dim); font-size: 0.88rem; }
+
+.picks { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.9rem; }
+.pick { background: none; border: 1px solid var(--line); border-radius: var(--r); padding: 0 0 0.6rem; cursor: pointer;
+  color: var(--ink); text-align: left; display: flex; flex-direction: column; gap: 0.25rem; position: relative; }
+.pick img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; background: var(--bg-2); display: block; }
+.pick__title { font-size: 0.9rem; padding: 0.2rem 0.6rem 0; line-height: 1.25; }
+.pick__meta { font-family: var(--mono); font-size: 0.66rem; color: var(--ink-faint); padding: 0 0.6rem; }
+.pick[aria-pressed="true"] { border-color: var(--stamp-2); box-shadow: 0 0 0 2px var(--stamp-2) inset; }
+.pick[aria-pressed="true"]::after { content: "✓"; position: absolute; top: 0.4rem; right: 0.4rem; width: 1.6rem; height: 1.6rem;
+  border-radius: 50%; background: var(--stamp-2); color: var(--ink); display: grid; place-items: center; font-size: 0.9rem; }
+
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1rem; max-width: 760px; }
+.fields label { display: flex; flex-direction: column; gap: 0.4rem; font-family: var(--mono); font-size: 0.74rem;
+  letter-spacing: 0.08em; color: var(--ink-dim); }
+.fields .wide { grid-column: 1 / -1; }
+.fields input, .fields textarea { background: var(--bg-2); color: var(--ink); border: 1px solid var(--line); border-radius: var(--r);
+  padding: 0.7rem 0.8rem; font: 400 1rem var(--body); }
+.fields input:focus, .fields textarea:focus { outline: none; border-color: var(--stamp-2); }
+.fields .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+.send { margin-top: 0.6rem; background: var(--stamp-2); color: var(--ink); border: 0; border-radius: var(--r);
+  padding: 0.95rem 2rem; font-family: var(--mono); font-size: 0.8rem; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; }
+.send:disabled { opacity: 0.35; cursor: not-allowed; }
+.status { color: var(--ink); margin-top: 1rem; min-height: 1.4em; }
+.rent--sent .step:not(:last-of-type), .rent--sent .price, .rent--sent .fields, .rent--sent .send { display: none; }
+
+@media (max-width: 640px) {
+  .choice { min-width: 4.5rem; padding: 0.7rem 1rem; }
+  .choices--cards .choice { min-width: 100%; }
+  .picks { grid-template-columns: repeat(2, 1fr); }
+}

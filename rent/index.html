@@ -2,10 +2,103 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>rescued.art</title>
-  <meta name="robots" content="noindex">
-  <meta http-equiv="refresh" content="0; url=/gallery/">
-  <link rel="canonical" href="/gallery/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#14110d">
+  <title>Rent — rescued.art</title>
+  <meta name="description" content="Rent a few rescued pieces for your walls in San Antonio, swapped once or twice a month.">
+  <link rel="icon" href="/icon-192.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;1,9..144,400&family=Hanken+Grotesk:wght@400;500&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/core.css?v=20261002">
+  <link rel="stylesheet" href="/assets/rent.css?v=20261008">
 </head>
-<body><p><a href="/gallery/">The gallery</a></p></body>
+<body>
+  <header>
+    <div class="masthead">
+      <a class="brand" href="/">
+        <span class="brand__mark">RESCUED.<span class="brand__mark-art">ART</span></span>
+        <span class="brand__sub">San Antonio · est. found</span>
+      </a>
+      <nav class="nav">
+        <a href="/gallery/">Gallery</a>
+        <a href="/visit/">Visit</a>
+        <a href="/rent/" aria-current="page">Rent</a>
+      </nav>
+    </div>
+    <hr class="rule rule--double">
+  </header>
+
+  <main>
+    <div class="page-head">
+      <p class="kicker">On your walls</p>
+      <h1>Rent</h1>
+    </div>
+
+    <div class="prose">
+      <p>Live with a few rescued pieces for a while. I’ll bring them by and swap them for new ones
+         once or twice a month. San Antonio only, for now.</p>
+    </div>
+
+    <form id="rent" class="rent" novalidate>
+      <section class="step" aria-labelledby="s1">
+        <h2 id="s1"><span class="step__no">01</span> How many pieces?</h2>
+        <div class="choices" data-choice="count"></div>
+      </section>
+
+      <section class="step" aria-labelledby="s2">
+        <h2 id="s2"><span class="step__no">02</span> What size?</h2>
+        <p class="hint">Measured on the longest side, frame included.</p>
+        <div class="choices choices--cards" data-choice="size"></div>
+      </section>
+
+      <section class="step" aria-labelledby="s3">
+        <h2 id="s3"><span class="step__no">03</span> What do you like? <span class="opt">optional</span></h2>
+        <p class="hint">Pick any that sound good; leave them all off to see everything.</p>
+        <div class="chips" data-chips="types"></div>
+        <div class="chips" data-chips="subjects"></div>
+      </section>
+
+      <section class="step" aria-labelledby="s4">
+        <h2 id="s4"><span class="step__no">04</span> How often should they change?</h2>
+        <div class="choices" data-choice="frequency"></div>
+      </section>
+
+      <div class="price" aria-live="polite">
+        <span class="price__label">Your rotation</span>
+        <span class="price__amount" id="price">—</span>
+        <span class="price__note" id="priceNote">Choose how many, a size and how often.</span>
+      </div>
+
+      <section class="step" aria-labelledby="s5">
+        <h2 id="s5"><span class="step__no">05</span> Choose your favourites</h2>
+        <p class="hint" id="pickHint">Choose a size first.</p>
+        <div class="picks" id="picks"></div>
+      </section>
+
+      <section class="step" aria-labelledby="s6">
+        <h2 id="s6"><span class="step__no">06</span> How do I reach you?</h2>
+        <div class="fields">
+          <label>Name <input name="name" autocomplete="name" maxlength="80" required></label>
+          <label>Email or phone <input name="contact" autocomplete="email" maxlength="120" required></label>
+          <label>Zip code <input name="zip" inputmode="numeric" autocomplete="postal-code" maxlength="10" required></label>
+          <label class="wide">Anything I should know? <span class="opt">optional</span>
+            <textarea name="notes" rows="3" maxlength="1000" placeholder="The room, the wall, what you have up now…"></textarea></label>
+          <label class="hp" aria-hidden="true">Website <input name="website" tabindex="-1" autocomplete="off"></label>
+        </div>
+        <p class="hint">Nothing is charged here. I’ll get in touch to set it up.</p>
+        <button type="submit" class="send" id="send" disabled>Send request</button>
+        <p class="status" id="status" role="status"></p>
+      </section>
+    </form>
+  </main>
+
+  <footer>
+    <span>© rescued.art — Southtown, San Antonio</span>
+    <a href="mailto:jake@rescued.art">jake@rescued.art</a>
+  </footer>
+
+  <script type="module" src="/assets/rent.js?v=20261008"></script>
+</body>
 </html>
