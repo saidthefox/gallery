@@ -75,25 +75,7 @@ h1 em { font-style: normal; color: var(--c-green); }
 .hero h1 { font-size: clamp(3.2rem, 9vw, 7rem); transform: rotate(-2deg); transform-origin: left; }
 .hero__statement { color: var(--ink); font-size: 1.15rem; }
 .hero__statement strong { color: var(--c-purple); font-weight: 400; }
-.tagline { font-family: var(--display); font-size: clamp(1.5rem, 3.4vw, 2.6rem); color: var(--c-orange); text-shadow: var(--halo);
-  margin: 1.2rem 0 0; transform: rotate(-1deg); }
 .sticker { position: absolute; font-family: var(--display); text-shadow: var(--halo); line-height: 1; pointer-events: none; user-select: none; }
-.sticker--come { color: var(--c-pink); font-size: clamp(1.4rem, 3vw, 2.4rem); transform: rotate(-24deg); right: 6%; top: 8%; }
-.sticker--come::after { content: "!"; display: inline-block; margin-left: 0.15em; color: var(--c-red); font-size: 1.4em; transform: rotate(14deg); }
-.wow { position: absolute; right: 2%; bottom: 4%; display: flex; flex-direction: column; align-items: center; gap: 0.05em;
-  font-family: var(--chunky); font-size: clamp(1.4rem, 3vw, 2.6rem); color: var(--c-red); text-shadow: var(--halo); line-height: 1;
-  transform: rotate(4deg); pointer-events: none; }
-.wow span:last-child { color: var(--c-brick); }
-@media (max-width: 860px) { .sticker--come { right: 4%; top: 2%; font-size: 1.3rem; } .wow { display: none; } }
-
-.alley { max-width: var(--maxw); margin: 0.6rem auto 0; padding: 0 clamp(1rem, 4vw, 3rem); display: flex; align-items: center;
-  gap: 1.2rem; flex-wrap: wrap; }
-.alley__words { font-family: var(--display); font-size: clamp(1.3rem, 2.6vw, 2rem); color: var(--c-purple); text-shadow: var(--halo); }
-.alley__vibes { font-family: var(--body); font-size: clamp(1.2rem, 2.2vw, 1.6rem); color: var(--c-lilac); text-shadow: var(--halo); transform: rotate(-3deg); }
-.arrow { position: relative; display: inline-block; width: clamp(110px, 16vw, 220px); height: 34px; background: var(--c-navy);
-  margin-right: 34px; border-radius: 3px; box-shadow: 0 0 0 3px #fff; }
-.arrow::after { content: ""; position: absolute; right: -40px; top: 50%; transform: translateY(-50%); border-left: 46px solid var(--c-navy);
-  border-top: 36px solid transparent; border-bottom: 36px solid transparent; filter: drop-shadow(3px 0 0 #fff); }
 .star { color: var(--c-navy); text-shadow: var(--halo); }
 
 /* the doors become hand-made cards pinned to the board */
