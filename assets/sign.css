@@ -24,10 +24,15 @@
   --halo: 2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 0 2px 0 #fff, 2px 0 0 #fff, 0 -2px 0 #fff, -2px 0 0 #fff;
   --wobble: 255px 15px 225px 15px / 15px 225px 15px 255px;
   --r: 6px;
+
+  /* layout (2026-10-09): one side gutter for masthead, rule and home, and a page width that grows on big screens */
+  --pad: clamp(1rem, 4vw, 2.4rem);
+  --maxw: clamp(1320px, 86vw, 2200px);
 }
 
-/* the board: watercolour blooms over the corrugation */
+/* the board: watercolour blooms over the corrugation (at least one window tall, or a short page shows a seam where they restart) */
 body {
+  min-height: 100vh; min-height: 100svh;
   background-color: var(--c-sun);
   background-image:
     repeating-linear-gradient(90deg, rgba(120, 88, 0, 0.055) 0 1px, transparent 1px 7px),
@@ -52,55 +57,113 @@ h1 em { font-style: normal; color: var(--c-green); }
 .kicker, .page-head .kicker { font-family: var(--body); font-size: 1rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--c-brick); }
 
 /* ---- masthead ------------------------------------------------------------ */
-.masthead { align-items: center; }
-.brand { align-items: center; }
-.brand__mark { font-family: var(--chunky); font-size: clamp(1.6rem, 3vw, 2.3rem); color: var(--c-purple); border: 0;
+/* Phones first (2026-10-09): brand and nav shrink with the screen so they share one row down to ~280px (they used to
+   overflow at 375px), and wrap rather than spill below that. Links keep 40px+ tap boxes via padding cancelled by
+   negative margin, so the header stays slim. Big screens scale the brand and nav up with the wider page. */
+.masthead { align-items: center; flex-wrap: wrap; column-gap: 0.75rem; row-gap: 0; padding: 0.5rem var(--pad); }
+.brand { align-items: center; padding: 0.65rem 0; margin: -0.65rem 0; }
+.brand__mark { font-family: var(--chunky); font-size: clamp(1.25rem, 5.6vw, 1.6rem); color: var(--c-purple); border: 0;
   text-transform: none; letter-spacing: 0.02em; text-shadow: var(--halo); padding: 0; transform: rotate(-2deg); }
 .brand__mark-art { color: var(--c-purple); }
 .brand:hover .brand__mark-art { color: var(--c-green); }
-.brand__sub { font-family: var(--body); font-size: 0.95rem; letter-spacing: 0.04em; text-transform: none; color: var(--c-green); }
-.nav { font-family: var(--display); font-size: 1.15rem; letter-spacing: 0.02em; text-transform: none; gap: 1.4rem; }
-.nav a { color: var(--c-green); border: 0; text-shadow: var(--halo); }
+.brand__sub { display: none; font-family: var(--body); font-size: clamp(0.95rem, 0.5rem + 0.45vw, 1.3rem); letter-spacing: 0.04em; text-transform: none; color: var(--c-green); }
+.nav { font-family: var(--display); font-size: clamp(0.95rem, 4.1vw, 1.15rem); letter-spacing: 0.02em; text-transform: none; gap: 0.75rem; }
+.nav a { color: var(--c-green); border: 0; text-shadow: var(--halo); padding: 0.6rem 0; margin: -0.6rem 0; }
 .nav a:nth-child(2) { color: var(--c-orange); }
 .nav a:nth-child(3) { color: var(--c-navy); }
 .nav a:hover, .nav a[aria-current] { color: var(--c-purple); text-decoration: underline wavy var(--c-pink) 2px; text-underline-offset: 6px; }
-.rule, .rule--double { border-top: 0; height: 6px; margin: 0.4rem clamp(1rem, 4vw, 3rem) 0;
+/* The rainbow spans the masthead's content box — brand's left edge to nav's right edge — at every width
+   (it used to be pinned 48px from the left while the 1320px page was centred). */
+.rule, .rule--double { border-top: 0; height: 6px; max-width: none;
+  margin: 0.4rem max(var(--pad), calc((100% - var(--maxw)) / 2 + var(--pad))) 0;  /* top: room for the current page's wavy underline */
   background: linear-gradient(90deg, var(--c-purple), var(--c-orange) 25%, var(--c-green) 50%, var(--c-navy) 75%, var(--c-pink));
   border-radius: 999px; opacity: 0.85; }
 .rule--double::after { display: none; }
-@media (max-width: 640px) { .brand__sub { display: none; } .nav { font-size: 1rem; gap: 0.9rem; } }
+@media (min-width: 641px) {
+  .brand__sub { display: inline; }
+  .nav { gap: 1.4rem; }
+}
+@media (min-width: 900px) {
+  .masthead { padding: clamp(0.6rem, 1.6vh, 1rem) var(--pad) 0.6rem; }  /* keeps the brand off the top edge */
+  .brand__mark { font-size: clamp(1.6rem, 1rem + 1.2vw, 3rem); }
+  .nav { font-size: clamp(1.15rem, 0.6rem + 0.6vw, 1.6rem); gap: clamp(1.4rem, 1.6vw, 2.4rem); }
+  .rule, .rule--double { margin-top: 0.25rem; }
+}
 
 /* ---- home: the sign ------------------------------------------------------ */
-.hero { position: relative; }
-.hero h1 { font-size: clamp(3.2rem, 9vw, 7rem); transform: rotate(-2deg); transform-origin: left; }
-.hero__statement { color: var(--ink); font-size: 1.15rem; }
+/* Laid out phone-first (2026-10-09). Phones: the headline on one line, the statement full width, the three doors as
+   compact cards (number beside the title) so the whole sign is about one screen, and the strip as a swipeable row that
+   bleeds to the screen edges. From 900px: headline left / statement right, three doors in a row, all eight snapshots
+   in one row; type and gaps follow the viewport HEIGHT so the page through the strip fits one screen, and the page
+   width grows with the monitor (--maxw) so 1440p is not a small island. */
+.hero { position: relative; display: block; padding: 1rem var(--pad) 0; }
+.hero .kicker { margin: 0; line-height: 1.2; }
+.hero h1 { font-size: clamp(3rem, 15.5vw, 5.5rem); line-height: 1.05; margin: 0.08em 0 0; white-space: nowrap;
+  transform: rotate(-2deg); transform-origin: left; }
+.hero h1 br { display: none; }  /* "Art, found" reads as one line; the markup keeps the space */
+.hero__statement { color: var(--ink); font-size: 1.05rem; line-height: 1.4; max-width: 46ch; margin: 0.55rem 0 0; }
 .hero__statement strong { color: var(--c-purple); font-weight: 400; }
 .sticker { position: absolute; font-family: var(--display); text-shadow: var(--halo); line-height: 1; pointer-events: none; user-select: none; }
 .star { color: var(--c-navy); text-shadow: var(--halo); }
 
 /* the doors become hand-made cards pinned to the board */
-.doors { gap: clamp(1rem, 2.4vw, 2rem); border: 0; padding: 1.6rem clamp(1rem, 4vw, 3rem) 0.6rem; background: none; }
-.door { --door-c: var(--c-green); background: var(--c-cream); border-radius: var(--wobble); box-shadow: 5px 6px 0 rgba(59, 26, 51, 0.22);
-  transform: rotate(-1deg); transition: transform .2s; min-height: 0; padding: 1.6rem 1.6rem 1.4rem; }
+.doors { grid-template-columns: 1fr; grid-auto-flow: row; gap: 0.8rem; border: 0; padding: 1rem var(--pad) 0; background: none; }
+.door { --door-c: var(--c-green); background: var(--c-cream); border-radius: var(--wobble); box-shadow: 4px 5px 0 rgba(59, 26, 51, 0.22);
+  transform: rotate(-1deg); transition: transform .2s; min-height: 0; padding: 0.65rem 1rem 0.7rem;
+  display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 0.6rem; }
 .door:nth-child(2) { --door-c: var(--c-orange); transform: rotate(1deg); }
 .door:nth-child(3) { --door-c: var(--c-navy); transform: rotate(-0.6deg); }
 .doors .door, .doors .door:last-child { border: 3px solid var(--door-c); }
 .door:hover { background: #fff; transform: rotate(0deg) translateY(-3px); }
-.door__no { font-family: var(--chunky); font-size: 0.95rem; letter-spacing: 0.05em; color: var(--door-c); }
-.door h2 { color: var(--c-purple); }
-.door p { color: var(--ink); font-size: 1.05rem; }
-.door__go { font-family: var(--display); font-size: 1rem; letter-spacing: 0.02em; text-transform: none; color: var(--c-navy); }
-@media (max-width: 860px) { .doors { grid-template-columns: 1fr; grid-auto-flow: row; } }
+.door__no { font-family: var(--chunky); font-size: 0.9rem; letter-spacing: 0.05em; color: var(--door-c); }
+.door h2 { color: var(--c-purple); font-size: 1.55rem; margin: 0; }
+.door p { flex-basis: 100%; color: var(--ink); font-size: 1rem; line-height: 1.3; max-width: none; margin: 0.15rem 0 0; }
+.door__go { font-family: var(--display); font-size: 1rem; letter-spacing: 0.02em; text-transform: none; color: var(--c-navy); margin-top: 0.3rem; }
 
 /* recent rescues strip: little snapshots */
-.recent__head h2 { font-size: 1.8rem; }
+.recent { padding: 1.4rem var(--pad) 0.4rem; }
+.recent__head { align-items: center; padding-bottom: 0.2rem; margin-bottom: 0.6rem; }
+.recent__head h2 { font-size: 1.5rem; }
+.recent__head .door__go { padding: 0.6rem 0; }
+.strip { grid-auto-columns: clamp(118px, 36vw, 200px); gap: 0.9rem;
+  margin: 0 calc(-1 * var(--pad)); padding: 6px var(--pad) 0.7rem; scroll-padding-inline: var(--pad);
+  scroll-snap-type: x proximity; overscroll-behavior-x: contain; scrollbar-width: thin; }
+.strip__item { scroll-snap-align: start; font: inherit; }  /* buttons don't inherit font-size; the em sizes need it */
 .strip__frame { background: #fff; padding: 6px; border-radius: 3px; box-shadow: 3px 4px 0 rgba(59, 26, 51, 0.2); }
 .strip__item:nth-child(odd) .strip__frame { transform: rotate(-1.5deg); }
 .strip__item:nth-child(even) .strip__frame { transform: rotate(1.5deg); }
 .strip__acc { font-family: var(--body); font-size: 0.85rem; color: var(--ink-dim); }
-.strip__title { font-family: var(--body); font-size: 0.95rem; color: var(--c-purple); }
+.strip__title { font-family: var(--body); font-size: 1rem; color: var(--c-purple); }
+
+@media (min-width: 900px) {
+  /* one unit for the home sections: ~15-16px up to ~850px-tall windows, then it grows with the height (~25px at 1300) */
+  .hero, .doors, .recent { --gap-y: clamp(1rem, calc(4.5vh - 0.75rem), 3.5rem); font-size: clamp(0.94rem, min(1.9vh, 1.15vw), 1.6rem); }
+  .hero { display: grid; grid-template-columns: auto minmax(0, 23em); justify-content: space-between; align-items: end;
+    column-gap: 3rem; padding: var(--gap-y) var(--pad) 0; }
+  .hero .kicker { font-size: 1em; }
+  .hero h1 { font-size: clamp(4.5rem, min(8vw, calc(17vh - 1.75rem)), 12rem); line-height: 1; }
+  .hero__statement { font-size: 1.15em; line-height: 1.45; max-width: none; margin: 0; }
+
+  .doors { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(1rem, 2.2vw, 2.6rem); padding: var(--gap-y) var(--pad) 0; }
+  .door { flex-direction: column; flex-wrap: nowrap; align-items: flex-start; padding: 1.05em 1.5em 1.1em; box-shadow: 5px 6px 0 rgba(59, 26, 51, 0.22); }
+  .door__no { font-size: 0.95em; }
+  .door h2 { font-size: min(2.1em, 3.1vw); margin: 0.25em 0 0.2em; }  /* vw cap keeps "Visit & Events" on one line near 900px */
+  .door p { flex-basis: auto; font-size: 1.08em; line-height: 1.4; max-width: 46ch; margin: 0; }
+  .door__go { font-size: 1em; margin-top: auto; padding-top: 0.55em; }  /* the three calls to action line up along the bottom */
+
+  .recent { padding: var(--gap-y) var(--pad) 0.4rem; }
+  .recent__head { margin-bottom: 0.8em; }
+  .recent__head h2 { font-size: 1.8em; }
+  .recent__head .door__go { font-size: 1em; }
+  .strip { grid-auto-flow: row; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: clamp(0.8rem, 1.2vw, 1.4rem);
+    margin: 0; padding: 4px 0 0.4rem; overflow: visible; scroll-snap-type: none; }
+  .strip__title { font-size: 0.95em; }
+}
 
 /* ---- pages ---------------------------------------------------------------- */
+/* same tight rule-to-kicker gap as home (it was 55-95px) */
+.page-head { padding-top: clamp(1rem, 3vw, 2.25rem); }
+.page-head .kicker { margin-top: 0; }
 .page-head h1 { font-size: clamp(2.8rem, 7vw, 5rem); transform: rotate(-1.5deg); transform-origin: left; }
 .page-head p { color: var(--ink); font-size: 1.15rem; }
 .page-head a { color: var(--c-purple); border-bottom: 2px solid var(--c-pink); }
@@ -152,6 +215,8 @@ h1 em { font-style: normal; color: var(--c-green); }
 .lb__x:hover, .lb__nav:hover { background: #fff; border-color: var(--c-green); color: var(--c-green); }
 
 /* ---- footer ---------------------------------------------------------------- */
-footer { font-family: var(--body); font-size: 1.05rem; letter-spacing: 0.04em; text-transform: none; color: var(--ink-dim); border-top: 0; }
-footer a { color: var(--c-purple); }
+footer { font-family: var(--body); font-size: 1.05rem; letter-spacing: 0.04em; text-transform: none; color: var(--ink-dim); border-top: 0;
+  padding: 1.2rem var(--pad) 1.6rem; }
+footer a { color: var(--c-purple); display: inline-block; padding: 0.6rem 0; margin: -0.6rem 0; }
+@media (min-width: 900px) { footer { font-size: clamp(1.05rem, 0.5rem + 0.5vw, 1.35rem); } }
 footer > span:first-child::before { content: "★"; color: var(--c-navy); margin-right: 0.5rem; }
