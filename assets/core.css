@@ -158,6 +158,8 @@ h1 em { font-style: italic; font-optical-sizing: auto; color: var(--ink); }
 .strip__item:hover .strip__frame img { transform: scale(1.04); }
 .strip__acc { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-faint);
   letter-spacing: 0.12em; display: block; padding-top: 0.5rem; }
+.strip__title { display: block; padding-top: 0.5rem; font-size: 0.9rem; line-height: 1.25;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* =============================================================================
    GRID  (gallery + rent)

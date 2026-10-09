@@ -98,6 +98,7 @@ h1 em { font-style: normal; color: var(--c-green); }
 .strip__item:nth-child(odd) .strip__frame { transform: rotate(-1.5deg); }
 .strip__item:nth-child(even) .strip__frame { transform: rotate(1.5deg); }
 .strip__acc { font-family: var(--body); font-size: 0.85rem; color: var(--ink-dim); }
+.strip__title { font-family: var(--body); font-size: 0.95rem; color: var(--c-purple); }
 
 /* ---- pages ---------------------------------------------------------------- */
 .page-head h1 { font-size: clamp(2.8rem, 7vw, 5rem); transform: rotate(-1.5deg); transform-origin: left; }

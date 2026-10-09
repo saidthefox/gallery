@@ -381,8 +381,9 @@ export async function mountRecent(mount, { count = 6 } = {}) {
       fig.type = 'button';
       fig.className = 'strip__item';
       fig.style.setProperty('--i', i);
-      fig.innerHTML = `<span class="strip__frame"><img alt="${esc(titleOf(it, null) || 'Recent rescue')}" loading="lazy"></span>
-                       <span class="strip__acc">${esc(accession(it))}</span>`;
+      const title = titleOf(it, null);
+      fig.innerHTML = `<span class="strip__frame"><img alt="${esc(title || 'Recent rescue')}" loading="lazy"></span>` +
+        (title ? `<span class="strip__title">${esc(title)}</span>` : `<span class="strip__acc">${esc(accession(it))}</span>`);
       fig.querySelector('img').src = imageUrlAt(it, 0, 500);
       fig.addEventListener('click', () => ensureLightbox().open(it, 0));
       strip.appendChild(fig);
