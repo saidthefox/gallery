@@ -101,8 +101,10 @@ async function getMetadata(token) {
   return record;
 }
 
+// Quotes too (2026-10-10): esc() is also used inside attributes (the Recent strip's alt="..."), where a title holding
+// a double quote could otherwise close the attribute and add a handler. Same as rent.js's.
 const esc = (s) => String(s == null ? '' : s)
-  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  .replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 // ===========================================================================
 // LIGHTBOX  (one instance, lazily built, shared across pages)
@@ -382,8 +384,9 @@ export async function mountRecent(mount, { count = 6 } = {}) {
       fig.className = 'strip__item';
       fig.style.setProperty('--i', i);
       const title = titleOf(it, null);
-      fig.innerHTML = `<span class="strip__frame"><img alt="${esc(title || 'Recent rescue')}" loading="lazy"></span>` +
+      fig.innerHTML = `<span class="strip__frame"><img alt="" loading="lazy"></span>` +
         (title ? `<span class="strip__title">${esc(title)}</span>` : `<span class="strip__acc">${esc(accession(it))}</span>`);
+      fig.querySelector('img').alt = title || 'Recent rescue';     // set as a property: never parsed as markup
       fig.querySelector('img').src = imageUrlAt(it, 0, 500);
       fig.addEventListener('click', () => ensureLightbox().open(it, 0));
       strip.appendChild(fig);
